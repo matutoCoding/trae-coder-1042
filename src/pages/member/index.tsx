@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, Image } from '@tarojs/components';
+import { View, Text, Input, Picker } from '@tarojs/components';
 import Taro, { useDidShow, usePullDownRefresh } from '@tarojs/taro';
 import styles from './index.module.scss';
 import classNames from 'classnames';
@@ -8,7 +8,7 @@ import EventCard from '@/components/EventCard';
 import SectionHeader from '@/components/SectionHeader';
 import StatCard from '@/components/StatCard';
 import { useStore } from '@/store';
-import { members, memberCards } from '@/data/members';
+import { memberCards } from '@/data/members';
 import type { Member, MemberCard as MemberCardType, ExpenseRecord, Event, QuickEntryItem, StatItem } from '@/types';
 import { formatMoney, getLevelColor, getStatusColor } from '@/utils';
 
@@ -26,61 +26,61 @@ const quickEntries: QuickEntryItem[] = [
   { id: '4', name: '更多功能', icon: '⋯', color: '#86909C', path: '' },
 ];
 
+const paymentOptions = ['余额支付', '微信支付', '支付宝', '现金', '银行卡'];
+
 const MemberPage: React.FC = () => {
-  const { state } = useStore();
+  const { state, rechargeMember, deductMemberHours, getExpenseById, getMemberById } = useStore();
   const [activeTab, setActiveTab] = useState('members');
-  const [memberList, setMemberList] = useState<Member[]>([]);
   const [cardList, setCardList] = useState<MemberCardType[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  const [rechargeVisible, setRechargeVisible] = useState(false);
+  const [rechargeMember, setRechargeMember] = useState<Member | null>(null);
+  const [rechargeAmount, setRechargeAmount] = useState('');
+  const [rechargePayIdx, setRechargePayIdx] = useState(0);
+
+  const [deductVisible, setDeductVisible] = useState(false);
+  const [deductMember, setDeductMember] = useState<Member | null>(null);
+  const [deductHours, setDeductHours] = useState('');
+  const [deductDesc, setDeductDesc] = useState('');
+
   const expenseList = state.expenseRecords;
   const eventList = state.events;
+  const memberList = state.members;
 
   const stats: StatItem[] = [
-    { label: '会员总数', value: String(state.members.length), unit: '人' },
+    { label: '会员总数', value: String(memberList.length), unit: '人' },
     { label: '今日消费', value: '3,280', unit: '元' },
     { label: '本月收入', value: '56,800', unit: '元' },
   ];
 
   const loadData = useCallback(() => {
-    console.log('[MemberPage] 加载数据');
-    setMemberList(state.members.length ? state.members : members);
     setCardList(memberCards);
-  }, [state.members]);
+  }, []);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
 
   useDidShow(() => {
-    console.log('[MemberPage] 页面显示');
     loadData();
   });
 
   usePullDownRefresh(() => {
-    console.log('[MemberPage] 下拉刷新');
     setIsRefreshing(true);
     setTimeout(() => {
       loadData();
       setIsRefreshing(false);
-      Taro.stopPullDownRefresh().catch((err) => {
-        console.error('[MemberPage] 停止刷新失败:', err);
-      });
-    }, 1000);
+      Taro.stopPullDownRefresh().catch(console.error);
+    }, 800);
   });
 
   const handleTabClick = (key: string) => {
-    console.log('[MemberPage] 切换标签:', key);
     setActiveTab(key);
   };
 
   const handleQuickEntry = (item: QuickEntryItem) => {
-    console.log('[MemberPage] 点击快捷入口:', item.name);
-    if (item.name === '马术考级') {
-      setActiveTab('events');
-    } else if (item.name === '赛事报名') {
-      setActiveTab('events');
-    } else if (item.name === '马场参观') {
+    if (item.name === '马术考级' || item.name === '赛事报名' || item.name === '马场参观') {
       setActiveTab('events');
     } else {
       Taro.showToast({ title: '功能开发中', icon: 'none' }).catch(console.error);
@@ -88,19 +88,19 @@ const MemberPage: React.FC = () => {
   };
 
   const handleExpenseClick = (record: ExpenseRecord) => {
-    console.log('[MemberPage] 点击消费记录:', record.id);
-    Taro.navigateTo({ url: `/pages/expense-detail/index?id=${record.id}` }).catch((err) => {
-      console.error('[MemberPage] 跳转失败:', err);
-    });
+    Taro.navigateTo({ url: `/pages/expense-detail/index?id=${record.id}` }).catch(console.error);
   };
 
   const getExpenseTypeColor = (type: string) => {
     const colorMap: Record<string, string> = {
-      '课程消费': '#8B4513',
-      '装备租赁': '#2E8B57',
-      '赛事报名': '#DAA520',
-      '商品购买': '#1976D2',
-      '其他': '#86909C',
+      课程消费: '#8B4513',
+      装备租赁: '#2E8B57',
+      赛事报名: '#DAA520',
+      赛事退款: '#D32F2F',
+      会员充值: '#1976D2',
+      课时扣减: '#7B1FA2',
+      商品购买: '#1976D2',
+      其他: '#86909C',
     };
     return colorMap[type] || '#86909C';
   };
@@ -112,6 +112,73 @@ const MemberPage: React.FC = () => {
     '4': '#86909C',
   };
 
+  const openRecharge = (member: Member, e: any) => {
+    e.stopPropagation?.();
+    setRechargeMember(member);
+    setRechargeAmount('');
+    setRechargePayIdx(0);
+    setRechargeVisible(true);
+  };
+
+  const submitRecharge = () => {
+    if (!rechargeMember) return;
+    const amount = Number(rechargeAmount);
+    if (!amount || amount <= 0) {
+      Taro.showToast({ title: '请输入有效金额', icon: 'none' }).catch(console.error);
+      return;
+    }
+    const res = rechargeMember(rechargeMember.id, amount, paymentOptions[rechargePayIdx] as any);
+    if (res.success) {
+      Taro.showToast({ title: res.message, icon: 'success' }).catch(console.error);
+      setRechargeVisible(false);
+    } else {
+      Taro.showToast({ title: res.message, icon: 'none' }).catch(console.error);
+    }
+  };
+
+  const openDeduct = (member: Member, e: any) => {
+    e.stopPropagation?.();
+    setDeductMember(member);
+    setDeductHours('');
+    setDeductDesc('');
+    setDeductVisible(true);
+  };
+
+  const submitDeduct = () => {
+    if (!deductMember) return;
+    const hours = Number(deductHours);
+    if (!hours || hours <= 0) {
+      Taro.showToast({ title: '请输入有效课时', icon: 'none' }).catch(console.error);
+      return;
+    }
+    if (hours > deductMember.remainingHours) {
+      Taro.showModal({
+        title: '课时不足',
+        content: `该会员剩余课时仅 ${deductMember.remainingHours} 节，是否继续扣减？`,
+        confirmText: '继续扣减',
+        success: (r) => {
+          if (r.confirm) {
+            doDeduct(hours);
+          }
+        },
+      }).catch(console.error);
+      return;
+    }
+    doDeduct(hours);
+  };
+
+  const doDeduct = (hours: number) => {
+    if (!deductMember) return;
+    const desc = deductDesc.trim() || '课程消耗';
+    const res = deductMemberHours(deductMember.id, hours, desc);
+    if (res.success) {
+      Taro.showToast({ title: res.message, icon: 'success' }).catch(console.error);
+      setDeductVisible(false);
+    } else {
+      Taro.showToast({ title: res.message, icon: 'none' }).catch(console.error);
+    }
+  };
+
   return (
     <View className={styles.pageContainer}>
       <View className={styles.header}>
@@ -119,7 +186,7 @@ const MemberPage: React.FC = () => {
         <Text className={styles.subText}>高效管理会员，提升服务质量</Text>
         <View className={styles.statsRow}>
           <View className={styles.statItem}>
-            <Text className={styles.statValue}>{state.members.length}</Text>
+            <Text className={styles.statValue}>{memberList.length}</Text>
             <Text className={styles.statLabel}>会员总数</Text>
           </View>
           <View className={styles.statItem}>
@@ -174,7 +241,23 @@ const MemberPage: React.FC = () => {
           <SectionHeader title="会员列表" subtitle={`共 ${memberList.length} 位会员`} />
           <View className={styles.listContainer}>
             {memberList.map((member) => (
-              <MemberCard key={member.id} data={member} />
+              <View key={member.id}>
+                <MemberCard data={member} />
+                <View className={styles.memberActions}>
+                  <View
+                    className={classNames(styles.actionBtn, styles.actionBtnPrimary)}
+                    onClick={(e) => openRecharge(member, e)}
+                  >
+                    <Text>💳 充值</Text>
+                  </View>
+                  <View
+                    className={classNames(styles.actionBtn, styles.actionBtnSecondary)}
+                    onClick={(e) => openDeduct(member, e)}
+                  >
+                    <Text>⏱️ 扣课时</Text>
+                  </View>
+                </View>
+              </View>
             ))}
           </View>
         </View>
@@ -288,6 +371,124 @@ const MemberPage: React.FC = () => {
             {eventList.map((event) => (
               <EventCard key={event.id} data={event} />
             ))}
+          </View>
+        </View>
+      )}
+
+      {rechargeVisible && rechargeMember && (
+        <View className={styles.modalMask} onClick={() => setRechargeVisible(false)}>
+          <View className={styles.modal} onClick={(e) => e.stopPropagation?.()}>
+            <View className={styles.modalHeader}>
+              <Text className={styles.modalTitle}>会员充值</Text>
+              <Text className={styles.modalClose} onClick={() => setRechargeVisible(false)}>✕</Text>
+            </View>
+            <View className={styles.modalBody}>
+              <View className={styles.modalMemberRow}>
+                <View className={styles.modalMemberAvatar}>
+                  <Text>{rechargeMember.name.charAt(0)}</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text className={styles.modalMemberName}>{rechargeMember.name}</Text>
+                  <Text className={styles.modalMemberMeta}>
+                    {rechargeMember.memberLevel} · 剩余课时 {rechargeMember.remainingHours} 节
+                  </Text>
+                </View>
+              </View>
+
+              <View className={styles.formItem}>
+                <Text className={styles.formLabel}>充值金额（元）</Text>
+                <Input
+                  className={styles.formInput}
+                  type="digit"
+                  placeholder="请输入充值金额"
+                  value={rechargeAmount}
+                  onInput={(e) => setRechargeAmount(e.detail.value)}
+                />
+              </View>
+
+              <View className={styles.formItem}>
+                <Text className={styles.formLabel}>支付方式</Text>
+                <Picker
+                  range={paymentOptions}
+                  value={rechargePayIdx}
+                  onChange={(e) => setRechargePayIdx(Number(e.detail.value))}
+                >
+                  <View className={styles.formPicker}>
+                    <Text>{paymentOptions[rechargePayIdx]}</Text>
+                    <Text className={styles.pickerArrow}>›</Text>
+                  </View>
+                </Picker>
+              </View>
+
+              <View className={styles.formHint}>
+                <Text>充值后将在消费台账生成"会员充值"记录，累计消费同步增加</Text>
+              </View>
+            </View>
+            <View className={styles.modalFooter}>
+              <View className={styles.modalBtnCancel} onClick={() => setRechargeVisible(false)}>
+                <Text>取消</Text>
+              </View>
+              <View className={styles.modalBtnPrimary} onClick={submitRecharge}>
+                <Text>确认充值</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+      )}
+
+      {deductVisible && deductMember && (
+        <View className={styles.modalMask} onClick={() => setDeductVisible(false)}>
+          <View className={styles.modal} onClick={(e) => e.stopPropagation?.()}>
+            <View className={styles.modalHeader}>
+              <Text className={styles.modalTitle}>课时扣减</Text>
+              <Text className={styles.modalClose} onClick={() => setDeductVisible(false)}>✕</Text>
+            </View>
+            <View className={styles.modalBody}>
+              <View className={styles.modalMemberRow}>
+                <View className={styles.modalMemberAvatar}>
+                  <Text>{deductMember.name.charAt(0)}</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text className={styles.modalMemberName}>{deductMember.name}</Text>
+                  <Text className={styles.modalMemberMeta}>
+                    剩余课时 {deductMember.remainingHours} 节
+                  </Text>
+                </View>
+              </View>
+
+              <View className={styles.formItem}>
+                <Text className={styles.formLabel}>扣减课时（节）</Text>
+                <Input
+                  className={styles.formInput}
+                  type="digit"
+                  placeholder="请输入扣减课时数量"
+                  value={deductHours}
+                  onInput={(e) => setDeductHours(e.detail.value)}
+                />
+              </View>
+
+              <View className={styles.formItem}>
+                <Text className={styles.formLabel}>扣减描述</Text>
+                <Input
+                  className={styles.formInput}
+                  placeholder="例如：初级骑乘课"
+                  value={deductDesc}
+                  onInput={(e) => setDeductDesc(e.detail.value)}
+                />
+              </View>
+
+              <View className={styles.formHint}>
+                <Text>扣减后会员剩余课时同步减少，并在消费台账生成记录</Text>
+              </View>
+            </View>
+            <View className={styles.modalFooter}>
+              <View className={styles.modalBtnCancel} onClick={() => setDeductVisible(false)}>
+                <Text>取消</Text>
+              </View>
+              <View className={styles.modalBtnPrimary} onClick={submitDeduct}>
+                <Text>确认扣减</Text>
+              </View>
+            </View>
           </View>
         </View>
       )}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, Input, Picker, Switch, ScrollView } from '@tarojs/components';
+import { View, Text, Input, Picker, ScrollView } from '@tarojs/components';
 import Taro, { useDidShow, usePullDownRefresh } from '@tarojs/taro';
 import styles from './index.module.scss';
 import classNames from 'classnames';
@@ -7,28 +7,29 @@ import SectionHeader from '@/components/SectionHeader';
 import QuickEntry from '@/components/QuickEntry';
 import StatCard from '@/components/StatCard';
 import { stables as staticStables } from '@/data/stables';
-import { members } from '@/data/members';
 import { useStore } from '@/store';
 import type {
   Stable,
-  FeedingRecord,
   Equipment,
   QuickEntryItem,
   StatItem,
   Member,
+  EquipmentRental,
 } from '@/types';
+import { formatMoney, getStatusColor } from '@/utils';
 
 const tabs = [
   { key: 'stable', label: '马房管理' },
   { key: 'feeding', label: '饲料投喂' },
   { key: 'equipment', label: '装备租赁' },
+  { key: 'rentals', label: '租赁记录' },
 ];
 
 const quickEntries: QuickEntryItem[] = [
   { id: '1', name: '卫生清扫', icon: '🧹', color: '#2E8B57', path: '' },
   { id: '2', name: '饲料投喂', icon: '🥕', color: '#FF8C00', path: '' },
   { id: '3', name: '装备租赁', icon: '🎽', color: '#1976D2', path: '' },
-  { id: '4', name: '马房维修', icon: '🔧', color: '#D32F2F', path: '' },
+  { id: '4', name: '租赁记录', icon: '�', color: '#DAA520', path: '' },
 ];
 
 const equipmentIcons: Record<string, string> = {
@@ -59,6 +60,7 @@ const StablePage: React.FC = () => {
     addCleanRecord,
     addFeedingRecord,
     rentEquipment,
+    returnEquipment,
   } = useStore();
 
   const [activeTab, setActiveTab] = useState('stable');
@@ -72,6 +74,8 @@ const StablePage: React.FC = () => {
   const [cleanForm, setCleanForm] = useState<{
     stableId: string;
     stableNo: string;
+    horseId: string;
+    horseName: string;
     items: string[];
     operator: string;
     date: string;
@@ -79,6 +83,8 @@ const StablePage: React.FC = () => {
   }>({
     stableId: '',
     stableNo: '',
+    horseId: '',
+    horseName: '',
     items: [],
     operator: '',
     date: new Date().toISOString().slice(0, 10),
@@ -86,6 +92,8 @@ const StablePage: React.FC = () => {
   });
 
   const [feedingForm, setFeedingForm] = useState<{
+    stableId: string;
+    stableNo: string;
     horseId: string;
     horseName: string;
     feedType: string;
@@ -94,6 +102,8 @@ const StablePage: React.FC = () => {
     date: string;
     time: string;
   }>({
+    stableId: '',
+    stableNo: '',
     horseId: '',
     horseName: '',
     feedType: '',
@@ -118,10 +128,11 @@ const StablePage: React.FC = () => {
   });
 
   const now = new Date();
+  const todayStr = now.toISOString().slice(0, 10);
   const stats: StatItem[] = [
     { label: '马房总数', value: String(stableList.length), unit: '间' },
     { label: '已占用', value: String(stableList.filter(s => s.status === '已占用').length), unit: '间' },
-    { label: '今日投喂', value: String(state.feedingRecords.filter(r => r.date === now.toISOString().slice(0, 10)).length), unit: '次' },
+    { label: '今日投喂', value: String(state.feedingRecords.filter(r => r.date === todayStr).length), unit: '次' },
   ];
 
   const loadData = useCallback(() => {
@@ -133,7 +144,6 @@ const StablePage: React.FC = () => {
   }, [loadData]);
 
   useDidShow(() => {
-    console.log('[StablePage] 页面显示');
     loadData();
   });
 
@@ -157,6 +167,8 @@ const StablePage: React.FC = () => {
       openFeedingModal();
     } else if (item.name === '装备租赁') {
       setActiveTab('equipment');
+    } else if (item.name === '租赁记录') {
+      setActiveTab('rentals');
     } else {
       Taro.showToast({ title: '功能开发中', icon: 'none' }).catch(console.error);
     }
@@ -176,31 +188,35 @@ const StablePage: React.FC = () => {
   };
 
   const openCleanModal = (presetStable?: Stable) => {
-    const now = new Date();
-    const hh = String(now.getHours()).padStart(2, '0');
-    const mm = String(now.getMinutes()).padStart(2, '0');
+    const d = new Date();
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mm = String(d.getMinutes()).padStart(2, '0');
     setCleanForm({
       stableId: presetStable?.id || '',
       stableNo: presetStable?.stableNo || '',
+      horseId: presetStable?.horseId || '',
+      horseName: presetStable?.horseName || '',
       items: ['清理粪便', '清洗食槽'],
       operator: '',
-      date: new Date().toISOString().slice(0, 10),
+      date: todayStr,
       time: `${hh}:${mm}`,
     });
     setShowCleanModal(true);
   };
 
   const openFeedingModal = (presetStable?: Stable) => {
-    const now = new Date();
-    const hh = String(now.getHours()).padStart(2, '0');
-    const mm = String(now.getMinutes()).padStart(2, '0');
+    const d = new Date();
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mm = String(d.getMinutes()).padStart(2, '0');
     setFeedingForm({
+      stableId: presetStable?.id || '',
+      stableNo: presetStable?.stableNo || '',
       horseId: presetStable?.horseId || '',
       horseName: presetStable?.horseName || '',
       feedType: '苜蓿干草',
       quantity: '4',
       operator: '',
-      date: new Date().toISOString().slice(0, 10),
+      date: todayStr,
       time: `${hh}:${mm}`,
     });
     setShowFeedingModal(true);
@@ -252,6 +268,8 @@ const StablePage: React.FC = () => {
     addCleanRecord({
       stableId: cleanForm.stableId || 'custom',
       stableNo: cleanForm.stableNo,
+      horseId: cleanForm.horseId || undefined,
+      horseName: cleanForm.horseName.trim() || undefined,
       date: cleanForm.date,
       time: cleanForm.time,
       operator: cleanForm.operator.trim(),
@@ -285,6 +303,8 @@ const StablePage: React.FC = () => {
       return;
     }
     addFeedingRecord({
+      stableId: feedingForm.stableId || undefined,
+      stableNo: feedingForm.stableNo || undefined,
       horseId: feedingForm.horseId || 'custom',
       horseName: feedingForm.horseName.trim(),
       date: feedingForm.date,
@@ -347,6 +367,23 @@ const StablePage: React.FC = () => {
     }
   };
 
+  const handleReturnRental = (rental: EquipmentRental) => {
+    Taro.showModal({
+      title: '确认归还',
+      content: `确定要归还 ${rental.equipmentName} × ${rental.quantity} 吗？`,
+    })
+      .then((res) => {
+        if (res.confirm) {
+          const result = returnEquipment(rental.id);
+          Taro.showToast({
+            title: result.message,
+            icon: result.success ? 'success' : 'none',
+          }).catch(console.error);
+        }
+      })
+      .catch(console.error);
+  };
+
   const toggleCleanItem = (item: string) => {
     const exists = cleanForm.items.includes(item);
     setCleanForm({
@@ -356,8 +393,6 @@ const StablePage: React.FC = () => {
         : [...cleanForm.items, item],
     });
   };
-
-  const today = new Date().toISOString().slice(0, 10);
 
   return (
     <View className={styles.pageContainer}>
@@ -399,7 +434,7 @@ const StablePage: React.FC = () => {
                     <Text>{stable.status}</Text>
                   </View>
                 </View>
-                {stable.horseName && <Text className={styles.horseName}>{stable.horseName}</Text>}
+                {stable.horseName && <Text className={styles.horseName}>🐴 {stable.horseName}</Text>}
                 <Text className={styles.stableInfo}>垫料：{stable.beddingType}</Text>
                 <View className={styles.stableFooter}>
                   <Text className={styles.cleanDate}>上次清扫：{stable.lastCleanDate}</Text>
@@ -416,35 +451,20 @@ const StablePage: React.FC = () => {
               extraText="登记清扫"
               onExtraClick={() => openCleanModal()}
             />
-            {state.cleanRecords.slice(0, 6).map((record) => (
+            {state.cleanRecords.slice(0, 10).map((record) => (
               <View key={record.id} className={styles.feedingCard}>
                 <View className={styles.feedingHeader}>
                   <Text className={styles.feedingHorse}>
                     马房 {record.stableNo}
+                    {record.horseName ? ` · ${record.horseName}` : ''}
                   </Text>
                   <Text className={styles.feedingTime}>
                     {record.date.slice(5)} {record.time}
                   </Text>
                 </View>
-                <View
-                  style={{
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    gap: '8rpx',
-                    marginBottom: '16rpx',
-                  }}
-                >
+                <View className={styles.tagGroup}>
                   {record.items.map((item, i) => (
-                    <View
-                      key={i}
-                      style={{
-                        padding: '4rpx 12rpx',
-                        background: 'rgba(46, 139, 87, 0.1)',
-                        borderRadius: '8rpx',
-                        fontSize: '22rpx',
-                        color: '#2E8B57',
-                      }}
-                    >
+                    <View key={i} className={styles.tagItem}>
                       <Text>{item}</Text>
                     </View>
                   ))}
@@ -468,7 +488,9 @@ const StablePage: React.FC = () => {
             {state.feedingRecords.map((record) => (
               <View key={record.id} className={styles.feedingCard}>
                 <View className={styles.feedingHeader}>
-                  <Text className={styles.feedingHorse}>{record.horseName}</Text>
+                  <Text className={styles.feedingHorse}>
+                    {record.stableNo ? `马房 ${record.stableNo} · ` : ''}🐴 {record.horseName}
+                  </Text>
                   <Text className={styles.feedingTime}>
                     {record.date.slice(5)} {record.time}
                   </Text>
@@ -521,6 +543,65 @@ const StablePage: React.FC = () => {
         </View>
       )}
 
+      {activeTab === 'rentals' && (
+        <View className={styles.section}>
+          <SectionHeader
+            title="租赁记录"
+            subtitle={`${state.rentals.length} 条记录`}
+          />
+          {state.rentals.length === 0 && (
+            <View className={styles.emptyState}>
+              <Text className={styles.emptyIcon}>📦</Text>
+              <Text className={styles.emptyText}>暂无租赁记录</Text>
+            </View>
+          )}
+          <View className={styles.feedingList}>
+            {state.rentals.map((rental) => (
+              <View key={rental.id} className={styles.feedingCard}>
+                <View className={styles.feedingHeader}>
+                  <Text className={styles.feedingHorse}>
+                    {equipmentIcons[
+                      state.equipment.find(e => e.id === rental.equipmentId)?.type || '其他'
+                    ] || '📦'} {rental.equipmentName}
+                  </Text>
+                  <View
+                    className={classNames(styles.statusTag, rental.status === '租赁中' ? styles.statusOccupied : styles.statusEmpty)}
+                  >
+                    <Text>{rental.status}</Text>
+                  </View>
+                </View>
+                <View style={{ display: 'flex', flexDirection: 'column', gap: '8rpx', marginBottom: '12rpx' }}>
+                  <Text style={{ fontSize: '24rpx', color: '#5D4037' }}>
+                    会员：{rental.memberName} · {rental.quantity}件 × {rental.hours}小时
+                  </Text>
+                  <Text style={{ fontSize: '24rpx', color: '#5D4037' }}>
+                    租赁时间：{rental.rentTime}
+                  </Text>
+                  {rental.returnTime && (
+                    <Text style={{ fontSize: '24rpx', color: '#2E8B57' }}>
+                      归还时间：{rental.returnTime}
+                    </Text>
+                  )}
+                </View>
+                <View className={styles.rentalFooter}>
+                  <Text style={{ fontSize: '30rpx', color: '#8B4513', fontWeight: '600' }}>
+                    ¥{formatMoney(rental.totalAmount)}
+                  </Text>
+                  {rental.status === '租赁中' && (
+                    <View
+                      className={classNames(styles.modalBtn, styles.modalBtnPrimary, styles.rentalReturnBtn)}
+                      onClick={() => handleReturnRental(rental)}
+                    >
+                      <Text>归还</Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+            ))}
+          </View>
+        </View>
+      )}
+
       {showCleanModal && (
         <View className={styles.modalOverlay} onClick={() => setShowCleanModal(false)}>
           <View className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
@@ -529,17 +610,33 @@ const StablePage: React.FC = () => {
               <Text className={styles.formLabel}>选择马房 *</Text>
               <Picker
                 mode="selector"
-                range={stableList.map((s) => s.stableNo)}
+                range={stableList.map((s) => `${s.stableNo}${s.horseName ? ` · ${s.horseName}` : ''}`)}
                 onChange={(e) => {
                   const idx = Number(e.detail.value);
                   const s = stableList[idx];
-                  setCleanForm({ ...cleanForm, stableNo: s.stableNo, stableId: s.id });
+                  if (s) {
+                    setCleanForm({
+                      ...cleanForm,
+                      stableNo: s.stableNo,
+                      stableId: s.id,
+                      horseId: s.horseId || '',
+                      horseName: s.horseName || '',
+                    });
+                  }
                 }}
               >
                 <View className={styles.formPicker}>
-                  <Text>{cleanForm.stableNo || '请选择马房'}</Text>
+                  <Text>{cleanForm.stableNo ? `${cleanForm.stableNo}${cleanForm.horseName ? ` · ${cleanForm.horseName}` : ''}` : '请选择马房'}</Text>
                 </View>
               </Picker>
+
+              <Text className={styles.formLabel}>马匹名称（可修改）</Text>
+              <Input
+                className={styles.formInput}
+                placeholder="未绑定马房请手动填写"
+                value={cleanForm.horseName}
+                onInput={(e) => setCleanForm({ ...cleanForm, horseName: e.detail.value })}
+              />
 
               <Text className={styles.formLabel}>清扫时间 *</Text>
               <View style={{ display: 'flex', gap: '16rpx' }}>
@@ -604,10 +701,33 @@ const StablePage: React.FC = () => {
           <View className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <Text className={styles.modalTitle}>记录投喂</Text>
             <ScrollView scrollY className={styles.modalScroll}>
-              <Text className={styles.formLabel}>马匹名称 *</Text>
+              <Text className={styles.formLabel}>选择马房 *</Text>
+              <Picker
+                mode="selector"
+                range={stableList.map((s) => `${s.stableNo}${s.horseName ? ` · ${s.horseName}` : ''}`)}
+                onChange={(e) => {
+                  const idx = Number(e.detail.value);
+                  const s = stableList[idx];
+                  if (s) {
+                    setFeedingForm({
+                      ...feedingForm,
+                      stableNo: s.stableNo,
+                      stableId: s.id,
+                      horseId: s.horseId || '',
+                      horseName: s.horseName || '',
+                    });
+                  }
+                }}
+              >
+                <View className={styles.formPicker}>
+                  <Text>{feedingForm.stableNo ? `${feedingForm.stableNo}${feedingForm.horseName ? ` · ${feedingForm.horseName}` : ''}` : '请选择马房'}</Text>
+                </View>
+              </Picker>
+
+              <Text className={styles.formLabel}>马匹名称（可修改）*</Text>
               <Input
                 className={styles.formInput}
-                placeholder="请输入马匹名称"
+                placeholder="请输入或确认马匹名称"
                 value={feedingForm.horseName}
                 onInput={(e) => setFeedingForm({ ...feedingForm, horseName: e.detail.value })}
               />
@@ -701,10 +821,10 @@ const StablePage: React.FC = () => {
               <Text className={styles.formLabel}>选择会员 *</Text>
               <Picker
                 mode="selector"
-                range={members.filter((m) => m.status === '正常').map((m) => m.name)}
+                range={state.members.filter((m) => m.status === '正常').map((m) => `${m.name}（${m.memberLevel}）`)}
                 onChange={(e) => {
                   const idx = Number(e.detail.value);
-                  const m = members.filter((mm) => mm.status === '正常')[idx];
+                  const m = state.members.filter((mm) => mm.status === '正常')[idx];
                   if (m) handleMemberSelect(m);
                 }}
               >

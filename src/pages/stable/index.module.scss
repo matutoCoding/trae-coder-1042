@@ -407,7 +407,28 @@
   color: $color-text-tertiary;
 }
 
+.emptyIcon {
+  font-size: 120rpx;
+  display: block;
+  margin-bottom: $spacing-md;
+}
+
 .emptyText {
   font-size: $font-size-base;
   margin-top: $spacing-md;
+}
+
+.rentalFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: $spacing-sm;
+  padding-top: $spacing-sm;
+  border-top: 1rpx solid $color-border-light;
+}
+
+.rentalReturnBtn {
+  padding: $spacing-xs $spacing-lg;
+  width: auto;
+  font-size: $font-size-sm;
 }

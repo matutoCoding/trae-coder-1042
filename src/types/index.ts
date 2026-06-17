@@ -124,6 +124,8 @@ export interface Stable {
 
 export interface FeedingRecord {
   id: string;
+  stableId?: string;
+  stableNo?: string;
   horseId: string;
   horseName: string;
   date: string;
@@ -160,25 +162,57 @@ export interface Event {
   status: '报名中' | '已截止' | '已结束';
   description: string;
   requirements?: string;
+  registrants?: EventRegistrant[];
+}
+
+export interface EventRegistrant {
+  memberId: string;
+  memberName: string;
+  registerTime: string;
+  expenseId?: string;
+  cancelled?: boolean;
+  cancelTime?: string;
+}
+
+export interface EquipmentRental {
+  id: string;
+  equipmentId: string;
+  equipmentName: string;
+  memberId: string;
+  memberName: string;
+  quantity: number;
+  hours: number;
+  totalAmount: number;
+  rentTime: string;
+  status: '租赁中' | '已归还';
+  returnTime?: string;
+  expenseId?: string;
 }
 
 export interface ExpenseRecord {
   id: string;
   memberId: string;
   memberName: string;
-  type: '课程消费' | '装备租赁' | '赛事报名' | '商品购买' | '其他';
+  type: '课程消费' | '装备租赁' | '赛事报名' | '商品购买' | '其他' | '会员充值' | '课时扣减' | '赛事退款';
   amount: number;
   date: string;
+  time?: string;
   description: string;
   paymentMethod: '微信支付' | '支付宝' | '银行卡' | '会员卡' | '现金';
   status: '已支付' | '待支付' | '已退款';
   relatedId?: string;
+  hours?: number;
+  quantity?: number;
+  item?: string;
+  remark?: string;
 }
 
 export interface CleanRecord {
   id: string;
   stableId: string;
   stableNo: string;
+  horseId?: string;
+  horseName?: string;
   date: string;
   time: string;
   operator: string;

@@ -8,6 +8,8 @@ import type {
   Event,
   ExpenseRecord,
   Member,
+  EquipmentRental,
+  EventRegistrant,
 } from '@/types';
 import { horses as initialHorses } from '@/data/horses';
 import {
@@ -18,7 +20,7 @@ import {
 import { events as initialEvents, expenseRecords as initialExpenseRecords, members as initialMembers } from '@/data/members';
 import { events } from '@/data/events';
 
-const STORAGE_KEY = 'equestrian_club_store_v1';
+const STORAGE_KEY = 'equestrian_club_store_v2';
 
 export interface StoreState {
   horses: Horse[];
@@ -28,6 +30,7 @@ export interface StoreState {
   events: Event[];
   expenseRecords: ExpenseRecord[];
   members: Member[];
+  rentals: EquipmentRental[];
 }
 
 export type StoreAction =
@@ -37,7 +40,12 @@ export type StoreAction =
   | { type: 'ADD_FEEDING_RECORD'; payload: FeedingRecord }
   | { type: 'UPDATE_EQUIPMENT'; payload: Equipment }
   | { type: 'UPDATE_EVENT'; payload: Event }
-  | { type: 'ADD_EXPENSE_RECORD'; payload: ExpenseRecord };
+  | { type: 'ADD_EXPENSE_RECORD'; payload: ExpenseRecord }
+  | { type: 'UPDATE_MEMBER'; payload: Member }
+  | { type: 'ADD_RENTAL'; payload: EquipmentRental }
+  | { type: 'UPDATE_RENTAL'; payload: EquipmentRental };
+
+const initialRentals: EquipmentRental[] = [];
 
 const initialState: StoreState = {
   horses: initialHorses,
@@ -47,6 +55,7 @@ const initialState: StoreState = {
   events: events.length ? events : initialEvents,
   expenseRecords: initialExpenseRecords,
   members: initialMembers,
+  rentals: initialRentals,
 };
 
 function storeReducer(state: StoreState, action: StoreAction): StoreState {
@@ -82,6 +91,25 @@ function storeReducer(state: StoreState, action: StoreAction): StoreState {
     case 'ADD_EXPENSE_RECORD':
       return { ...state, expenseRecords: [action.payload, ...state.expenseRecords] };
 
+    case 'UPDATE_MEMBER':
+      return {
+        ...state,
+        members: state.members.map((m) =>
+          m.id === action.payload.id ? action.payload : m
+        ),
+      };
+
+    case 'ADD_RENTAL':
+      return { ...state, rentals: [action.payload, ...state.rentals] };
+
+    case 'UPDATE_RENTAL':
+      return {
+        ...state,
+        rentals: state.rentals.map((r) =>
+          r.id === action.payload.id ? action.payload : r
+        ),
+      };
+
     default:
       return state;
   }
@@ -98,17 +126,25 @@ interface StoreContextValue {
     memberName: string,
     hours: number,
     quantity: number
-  ) => { success: boolean; message: string };
+  ) => { success: boolean; message: string; rentalId?: string };
+  returnEquipment: (rentalId: string) => { success: boolean; message: string };
   registerForEvent: (
     eventId: string,
     memberId: string,
     memberName: string
   ) => { success: boolean; message: string };
+  cancelRegistration: (
+    eventId: string,
+    memberId: string
+  ) => { success: boolean; message: string };
   addHorse: (horse: Omit<Horse, 'id'>) => void;
+  rechargeMember: (memberId: string, amount: number, paymentMethod: ExpenseRecord['paymentMethod']) => { success: boolean; message: string };
+  deductMemberHours: (memberId: string, hours: number, description: string) => { success: boolean; message: string };
   getExpenseById: (id: string) => ExpenseRecord | undefined;
   getEventById: (id: string) => Event | undefined;
   getEquipmentById: (id: string) => Equipment | undefined;
   getMemberById: (id: string) => Member | undefined;
+  getRentalById: (id: string) => EquipmentRental | undefined;
 }
 
 const StoreContext = createContext<StoreContextValue | undefined>(undefined);
@@ -131,6 +167,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             events: parsed.events?.length ? parsed.events : (events.length ? events : initialEvents),
             expenseRecords: parsed.expenseRecords?.length ? parsed.expenseRecords : initialExpenseRecords,
             members: parsed.members?.length ? parsed.members : initialMembers,
+            rentals: parsed.rentals?.length ? parsed.rentals : initialRentals,
           };
           dispatch({ type: 'HYDRATE', payload: merged });
           console.log('[Store] 已从本地存储恢复数据');
@@ -148,7 +185,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     if (isHydrated) {
       try {
         Taro.setStorageSync(STORAGE_KEY, JSON.stringify(state));
-        console.log('[Store] 数据已持久化');
       } catch (err) {
         console.error('[Store] 持久化失败:', err);
       }
@@ -174,20 +210,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const d = String(now.getDate()).padStart(2, '0');
     const hh = String(now.getHours()).padStart(2, '0');
     const mm = String(now.getMinutes()).padStart(2, '0');
-    const ss = String(now.getSeconds()).padStart(2, '0');
-    return `${y}-${m}-${d} ${hh}:${mm}:${ss}`;
+    return `${y}-${m}-${d} ${hh}:${mm}`;
   }, []);
 
   const addCleanRecord = useCallback((record: Omit<CleanRecord, 'id'>) => {
     const newRecord: CleanRecord = { ...record, id: generateId() };
     dispatch({ type: 'ADD_CLEAN_RECORD', payload: newRecord });
-    console.log('[Store] 新增清扫记录:', newRecord);
   }, [generateId]);
 
   const addFeedingRecord = useCallback((record: Omit<FeedingRecord, 'id'>) => {
     const newRecord: FeedingRecord = { ...record, id: generateId() };
     dispatch({ type: 'ADD_FEEDING_RECORD', payload: newRecord });
-    console.log('[Store] 新增投喂记录:', newRecord);
   }, [generateId]);
 
   const rentEquipment = useCallback(
@@ -197,7 +230,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       memberName: string,
       hours: number,
       quantity: number
-    ): { success: boolean; message: string } => {
+    ): { success: boolean; message: string; rentalId?: string } => {
       const equipment = state.equipment.find((eq) => eq.id === equipmentId);
       if (!equipment) {
         return { success: false, message: '装备不存在' };
@@ -210,6 +243,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       }
 
       const totalAmount = equipment.pricePerHour * hours * quantity;
+      const now = formatDateTime();
+      const expenseId = generateId();
+      const rentalId = generateId();
 
       const updatedEquipment: Equipment = {
         ...equipment,
@@ -219,23 +255,73 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       dispatch({ type: 'UPDATE_EQUIPMENT', payload: updatedEquipment });
 
       const newExpense: ExpenseRecord = {
-        id: generateId(),
+        id: expenseId,
         memberId,
         memberName,
         type: '装备租赁',
         amount: totalAmount,
-        date: formatDateTime(),
+        date: now,
+        time: now.split(' ')[1],
         description: `${equipment.name}租赁 ${quantity}件 × ${hours}小时`,
         paymentMethod: '微信支付',
         status: '已支付',
         relatedId: equipment.id,
+        item: equipment.name,
+        hours,
+        quantity,
       };
       dispatch({ type: 'ADD_EXPENSE_RECORD', payload: newExpense });
 
-      console.log('[Store] 装备租赁成功:', { equipment, totalAmount, newExpense });
-      return { success: true, message: `租赁成功！共 ${totalAmount} 元` };
+      const newRental: EquipmentRental = {
+        id: rentalId,
+        equipmentId: equipment.id,
+        equipmentName: equipment.name,
+        memberId,
+        memberName,
+        quantity,
+        hours,
+        totalAmount,
+        rentTime: now,
+        status: '租赁中',
+        expenseId,
+      };
+      dispatch({ type: 'ADD_RENTAL', payload: newRental });
+
+      return { success: true, message: `租赁成功！共 ${totalAmount} 元`, rentalId };
     },
     [state.equipment, generateId, formatDateTime]
+  );
+
+  const returnEquipment = useCallback(
+    (rentalId: string): { success: boolean; message: string } => {
+      const rental = state.rentals.find((r) => r.id === rentalId);
+      if (!rental) {
+        return { success: false, message: '租赁记录不存在' };
+      }
+      if (rental.status === '已归还') {
+        return { success: false, message: '该装备已归还' };
+      }
+
+      const equipment = state.equipment.find((eq) => eq.id === rental.equipmentId);
+      if (equipment) {
+        const updatedEquipment: Equipment = {
+          ...equipment,
+          availableQuantity: equipment.availableQuantity + rental.quantity,
+          status: equipment.availableQuantity + rental.quantity > 0 ? '可租赁' : equipment.status,
+        };
+        dispatch({ type: 'UPDATE_EQUIPMENT', payload: updatedEquipment });
+      }
+
+      const updatedRental: EquipmentRental = {
+        ...rental,
+        status: '已归还',
+        returnTime: formatDateTime(),
+      };
+      dispatch({ type: 'UPDATE_RENTAL', payload: updatedRental });
+
+      return { success: true, message: '归还成功，库存已恢复' };
+    },
+    [state.rentals, state.equipment, formatDateTime]
   );
 
   const registerForEvent = useCallback(
@@ -256,29 +342,47 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         return { success: false, message: `当前状态：${event.status}，不可报名` };
       }
 
-      const updatedEvent: Event = {
-        ...event,
-        currentParticipants: event.currentParticipants + 1,
-      };
-      dispatch({ type: 'UPDATE_EVENT', payload: updatedEvent });
+      const registrants: EventRegistrant[] = event.registrants ? [...event.registrants] : [];
+      if (registrants.find((r) => r.memberId === memberId && !r.cancelled)) {
+        return { success: false, message: '该会员已报名' };
+      }
+
+      const now = formatDateTime();
+      let expenseId: string | undefined;
 
       if (event.price > 0) {
+        expenseId = generateId();
         const newExpense: ExpenseRecord = {
-          id: generateId(),
+          id: expenseId,
           memberId,
           memberName,
           type: '赛事报名',
           amount: event.price,
-          date: formatDateTime(),
+          date: now,
+          time: now.split(' ')[1],
           description: `${event.name} 报名费`,
           paymentMethod: '微信支付',
           status: '已支付',
           relatedId: event.id,
+          item: event.name,
         };
         dispatch({ type: 'ADD_EXPENSE_RECORD', payload: newExpense });
       }
 
-      console.log('[Store] 活动报名成功:', { event, memberName });
+      registrants.push({
+        memberId,
+        memberName,
+        registerTime: now,
+        expenseId,
+      });
+
+      const updatedEvent: Event = {
+        ...event,
+        currentParticipants: event.currentParticipants + 1,
+        registrants,
+      };
+      dispatch({ type: 'UPDATE_EVENT', payload: updatedEvent });
+
       return {
         success: true,
         message:
@@ -290,11 +394,137 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [state.events, generateId, formatDateTime]
   );
 
+  const cancelRegistration = useCallback(
+    (eventId: string, memberId: string): { success: boolean; message: string } => {
+      const event = state.events.find((ev) => ev.id === eventId);
+      if (!event) {
+        return { success: false, message: '活动不存在' };
+      }
+
+      const registrants = event.registrants ? [...event.registrants] : [];
+      const targetIdx = registrants.findIndex((r) => r.memberId === memberId && !r.cancelled);
+      if (targetIdx < 0) {
+        return { success: false, message: '未找到该会员的报名记录' };
+      }
+
+      const now = formatDateTime();
+      const target = registrants[targetIdx];
+      registrants[targetIdx] = { ...target, cancelled: true, cancelTime: now };
+
+      // 如果有报名费且已支付，生成退款记录
+      if (target.expenseId && event.price > 0) {
+        const refundExpense: ExpenseRecord = {
+          id: generateId(),
+          memberId: target.memberId,
+          memberName: target.memberName,
+          type: '赛事退款',
+          amount: event.price,
+          date: now,
+          time: now.split(' ')[1],
+          description: `${event.name} 报名费退款`,
+          paymentMethod: '微信支付',
+          status: '已退款',
+          relatedId: event.id,
+          item: event.name,
+          remark: `原订单号: ${target.expenseId}`,
+        };
+        dispatch({ type: 'ADD_EXPENSE_RECORD', payload: refundExpense });
+      }
+
+      const updatedEvent: Event = {
+        ...event,
+        currentParticipants: Math.max(0, event.currentParticipants - 1),
+        registrants,
+      };
+      dispatch({ type: 'UPDATE_EVENT', payload: updatedEvent });
+
+      return { success: true, message: '报名已取消，名额已恢复' };
+    },
+    [state.events, generateId, formatDateTime]
+  );
+
   const addHorse = useCallback((horse: Omit<Horse, 'id'>) => {
     const newHorse: Horse = { ...horse, id: generateId() };
     dispatch({ type: 'ADD_HORSE', payload: newHorse });
-    console.log('[Store] 新增马匹:', newHorse);
   }, [generateId]);
+
+  const rechargeMember = useCallback(
+    (memberId: string, amount: number, paymentMethod: ExpenseRecord['paymentMethod']): { success: boolean; message: string } => {
+      const member = state.members.find((m) => m.id === memberId);
+      if (!member) {
+        return { success: false, message: '会员不存在' };
+      }
+      if (!amount || amount <= 0) {
+        return { success: false, message: '充值金额必须大于0' };
+      }
+
+      const now = formatDateTime();
+      const updatedMember: Member = {
+        ...member,
+        totalSpent: member.totalSpent + amount,
+      };
+      dispatch({ type: 'UPDATE_MEMBER', payload: updatedMember });
+
+      const expense: ExpenseRecord = {
+        id: generateId(),
+        memberId,
+        memberName: member.name,
+        type: '会员充值',
+        amount,
+        date: now,
+        time: now.split(' ')[1],
+        description: `会员充值 ¥${amount}`,
+        paymentMethod,
+        status: '已支付',
+        relatedId: memberId,
+      };
+      dispatch({ type: 'ADD_EXPENSE_RECORD', payload: expense });
+
+      return { success: true, message: `充值成功！充值金额 ¥${amount}` };
+    },
+    [state.members, generateId, formatDateTime]
+  );
+
+  const deductMemberHours = useCallback(
+    (memberId: string, hours: number, description: string): { success: boolean; message: string } => {
+      const member = state.members.find((m) => m.id === memberId);
+      if (!member) {
+        return { success: false, message: '会员不存在' };
+      }
+      if (!hours || hours <= 0) {
+        return { success: false, message: '扣减课时必须大于0' };
+      }
+      if (member.remainingHours < hours) {
+        return { success: false, message: `课时不足，剩余仅 ${member.remainingHours} 节` };
+      }
+
+      const now = formatDateTime();
+      const updatedMember: Member = {
+        ...member,
+        remainingHours: member.remainingHours - hours,
+      };
+      dispatch({ type: 'UPDATE_MEMBER', payload: updatedMember });
+
+      const expense: ExpenseRecord = {
+        id: generateId(),
+        memberId,
+        memberName: member.name,
+        type: '课时扣减',
+        amount: 0,
+        date: now,
+        time: now.split(' ')[1],
+        description: description || `课时扣减 ${hours} 节`,
+        paymentMethod: '会员卡',
+        status: '已支付',
+        relatedId: memberId,
+        hours,
+      };
+      dispatch({ type: 'ADD_EXPENSE_RECORD', payload: expense });
+
+      return { success: true, message: `扣减成功！剩余课时 ${updatedMember.remainingHours} 节` };
+    },
+    [state.members, generateId, formatDateTime]
+  );
 
   const getExpenseById = useCallback(
     (id: string) => state.expenseRecords.find((r) => r.id === id),
@@ -316,18 +546,28 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [state.members]
   );
 
+  const getRentalById = useCallback(
+    (id: string) => state.rentals.find((r) => r.id === id),
+    [state.rentals]
+  );
+
   const value: StoreContextValue = {
     state,
     dispatch,
     addCleanRecord,
     addFeedingRecord,
     rentEquipment,
+    returnEquipment,
     registerForEvent,
+    cancelRegistration,
     addHorse,
+    rechargeMember,
+    deductMemberHours,
     getExpenseById,
     getEventById,
     getEquipmentById,
     getMemberById,
+    getRentalById,
   };
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;

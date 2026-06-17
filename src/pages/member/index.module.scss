@@ -267,3 +267,211 @@
 .listContainer {
   padding-bottom: 120rpx;
 }
+
+.memberActions {
+  display: flex;
+  gap: $spacing-md;
+  margin-top: -$spacing-md;
+  margin-bottom: $spacing-lg;
+  padding: 0 $spacing-md;
+}
+
+.actionBtn {
+  flex: 1;
+  padding: $spacing-sm;
+  border-radius: $radius-md;
+  text-align: center;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+
+  &:active {
+    opacity: 0.85;
+  }
+}
+
+.actionBtnPrimary {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  color: $color-text-inverse;
+}
+
+.actionBtnSecondary {
+  background: rgba($color-primary, 0.1);
+  color: $color-primary;
+}
+
+.modalMask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-lg;
+}
+
+.modal {
+  width: 100%;
+  max-width: 650rpx;
+  background: $color-bg-card;
+  border-radius: $radius-xl;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-lg;
+  border-bottom: 1rpx solid $color-border-light;
+}
+
+.modalTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.modalClose {
+  font-size: 40rpx;
+  color: $color-text-tertiary;
+  padding: 4rpx 8rpx;
+}
+
+.modalBody {
+  padding: $spacing-lg;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modalMemberRow {
+  display: flex;
+  gap: $spacing-md;
+  align-items: center;
+  padding: $spacing-md;
+  background: $color-bg-secondary;
+  border-radius: $radius-md;
+  margin-bottom: $spacing-lg;
+}
+
+.modalMemberAvatar {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: $radius-round;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  color: $color-text-inverse;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: $font-size-base;
+  font-weight: $font-weight-bold;
+  flex-shrink: 0;
+}
+
+.modalMemberName {
+  font-size: $font-size-base;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  display: block;
+}
+
+.modalMemberMeta {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  display: block;
+  margin-top: 4rpx;
+}
+
+.formItem {
+  margin-bottom: $spacing-md;
+}
+
+.formLabel {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  display: block;
+  margin-bottom: $spacing-xs;
+}
+
+.formInput {
+  width: 100%;
+  height: 80rpx;
+  padding: 0 $spacing-md;
+  background: $color-bg-secondary;
+  border-radius: $radius-md;
+  font-size: $font-size-base;
+  color: $color-text-primary;
+  box-sizing: border-box;
+}
+
+.formPicker {
+  width: 100%;
+  height: 80rpx;
+  padding: 0 $spacing-md;
+  background: $color-bg-secondary;
+  border-radius: $radius-md;
+  font-size: $font-size-base;
+  color: $color-text-primary;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+}
+
+.pickerArrow {
+  color: $color-text-tertiary;
+  font-size: 32rpx;
+}
+
+.formHint {
+  margin-top: $spacing-md;
+  padding: $spacing-md;
+  background: $color-tag-bg;
+  border-radius: $radius-md;
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  line-height: 1.6;
+}
+
+.modalFooter {
+  display: flex;
+  gap: $spacing-md;
+  padding: $spacing-md $spacing-lg $spacing-lg;
+  border-top: 1rpx solid $color-border-light;
+}
+
+.modalBtnCancel {
+  flex: 1;
+  padding: $spacing-sm;
+  border-radius: $radius-button;
+  text-align: center;
+  font-size: $font-size-base;
+  font-weight: $font-weight-medium;
+  background: $color-bg-secondary;
+  color: $color-text-secondary;
+
+  &:active {
+    opacity: 0.85;
+  }
+}
+
+.modalBtnPrimary {
+  flex: 1;
+  padding: $spacing-sm;
+  border-radius: $radius-button;
+  text-align: center;
+  font-size: $font-size-base;
+  font-weight: $font-weight-medium;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  color: $color-text-inverse;
+
+  &:active {
+    opacity: 0.85;
+  }
+}

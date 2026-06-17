@@ -1,11 +1,10 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, Input, Picker, ScrollView } from '@tarojs/components';
-import Taro, { useRouter, useDidShow } from '@tarojs/taro';
+import { View, Text, Picker, ScrollView } from '@tarojs/components';
+import Taro, { useRouter, useDidShow, usePullDownRefresh } from '@tarojs/taro';
 import styles from './index.module.scss';
 import classNames from 'classnames';
 import { useStore } from '@/store';
-import { members } from '@/data/members';
-import type { Event, Member } from '@/types';
+import type { Event, Member, EventRegistrant } from '@/types';
 import { formatMoney, getStatusColor } from '@/utils';
 
 const eventTypeColors: Record<string, string> = {
@@ -17,7 +16,7 @@ const eventTypeColors: Record<string, string> = {
 const EventDetailPage: React.FC = () => {
   const router = useRouter();
   const eventId = router.params.id || '';
-  const { getEventById, registerForEvent, state } = useStore();
+  const { getEventById, registerForEvent, cancelRegistration, state } = useStore();
 
   const [event, setEvent] = useState<Event | undefined>(getEventById(eventId));
   const [showRegisterModal, setShowRegisterModal] = useState(false);
@@ -25,15 +24,18 @@ const EventDetailPage: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
-    console.log('[EventDetailPage] 页面加载，活动ID:', eventId);
     const ev = getEventById(eventId);
     setEvent(ev);
   }, [eventId, getEventById]);
 
   useDidShow(() => {
-    console.log('[EventDetailPage] 页面显示');
     const ev = getEventById(eventId);
     setEvent(ev);
+  });
+
+  usePullDownRefresh(() => {
+    refreshEvent();
+    Taro.stopPullDownRefresh().catch(console.error);
   });
 
   const refreshEvent = useCallback(() => {
@@ -44,6 +46,26 @@ const EventDetailPage: React.FC = () => {
       setIsRefreshing(false);
     }, 500);
   }, [eventId, getEventById]);
+
+  const handleCancelRegistration = (registrant: EventRegistrant) => {
+    Taro.showModal({
+      title: '确认取消报名',
+      content: `确定要取消 ${registrant.memberName} 的 ${event?.name} 报名吗？${event && event.price > 0 ? `报名费 ¥${event.price} 将原路退回` : ''}`,
+    })
+      .then((res) => {
+        if (res.confirm) {
+          const result = cancelRegistration(eventId, registrant.memberId);
+          Taro.showToast({
+            title: result.message,
+            icon: result.success ? 'success' : 'none',
+          }).catch(console.error);
+          if (result.success) {
+            setTimeout(() => refreshEvent(), 600);
+          }
+        }
+      })
+      .catch(console.error);
+  };
 
   if (!event) {
     return (
@@ -59,6 +81,7 @@ const EventDetailPage: React.FC = () => {
   const remaining = event.maxParticipants - event.currentParticipants;
   const canRegister = event.status === '报名中' && remaining > 0;
   const progress = Math.min(100, (event.currentParticipants / event.maxParticipants) * 100);
+  const activeRegistrants = (event.registrants || []).filter((r) => !r.cancelled);
 
   const openRegisterModal = () => {
     if (!canRegister) {
@@ -91,6 +114,10 @@ const EventDetailPage: React.FC = () => {
   const handleMemberSelect = (member: Member) => {
     setSelectedMember(member);
   };
+
+  const availableMembers = state.members.filter(
+    (m) => m.status === '正常' && !activeRegistrants.find((r) => r.memberId === m.id)
+  );
 
   return (
     <View className={styles.pageContainer}>
@@ -203,6 +230,45 @@ const EventDetailPage: React.FC = () => {
           </View>
         )}
 
+        <View className={styles.card}>
+          <Text className={styles.cardTitle}>
+            已报名会员（{activeRegistrants.length}人）
+          </Text>
+          {activeRegistrants.length === 0 ? (
+            <View className={styles.emptyBox}>
+              <Text style={{ color: '#86909C', fontSize: '26rpx' }}>暂无报名会员</Text>
+            </View>
+          ) : (
+            <View className={styles.registrantList}>
+              {activeRegistrants.map((r) => {
+                const m = state.members.find((mm) => mm.id === r.memberId);
+                return (
+                  <View key={r.memberId} className={styles.registrantItem}>
+                    <View className={styles.registrantAvatar}>
+                      <Text>{r.memberName.charAt(0)}</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text className={styles.registrantName}>{r.memberName}</Text>
+                      <Text className={styles.registrantMeta}>
+                        报名时间：{r.registerTime}
+                        {m ? ` · ${m.memberLevel}` : ''}
+                      </Text>
+                    </View>
+                    {event.status === '报名中' && (
+                      <View
+                        className={classNames(styles.modalBtn, styles.cancelBtn)}
+                        onClick={() => handleCancelRegistration(r)}
+                      >
+                        <Text>取消报名</Text>
+                      </View>
+                    )}
+                  </View>
+                );
+              })}
+            </View>
+          )}
+        </View>
+
         <View style={{ height: '160rpx' }} />
       </ScrollView>
 
@@ -241,10 +307,10 @@ const EventDetailPage: React.FC = () => {
               <Text className={styles.formLabel}>选择报名会员 *</Text>
               <Picker
                 mode="selector"
-                range={members.filter((m) => m.status === '正常').map((m) => `${m.name} (${m.memberLevel})`)}
+                range={availableMembers.map((m) => `${m.name} (${m.memberLevel})`)}
                 onChange={(e) => {
                   const idx = Number(e.detail.value);
-                  const m = members.filter((mm) => mm.status === '正常')[idx];
+                  const m = availableMembers[idx];
                   if (m) handleMemberSelect(m);
                 }}
               >
@@ -252,7 +318,7 @@ const EventDetailPage: React.FC = () => {
                   <Text>
                     {selectedMember
                       ? `${selectedMember.name} (${selectedMember.memberLevel})`
-                      : '请选择报名会员'}
+                      : availableMembers.length > 0 ? '请选择报名会员' : '所有会员均已报名'}
                   </Text>
                 </View>
               </Picker>

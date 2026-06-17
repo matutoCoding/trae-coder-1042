@@ -347,3 +347,62 @@
   padding: $spacing-xs $spacing-md;
   border-radius: $radius-sm;
 }
+
+.emptyBox {
+  padding: $spacing-xl;
+  text-align: center;
+  background: $color-bg-secondary;
+  border-radius: $radius-md;
+}
+
+.registrantList {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.registrantItem {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  padding: $spacing-md;
+  background: $color-bg-secondary;
+  border-radius: $radius-md;
+}
+
+.registrantAvatar {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: $radius-round;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  color: $color-text-inverse;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: $font-size-base;
+  font-weight: $font-weight-bold;
+  flex-shrink: 0;
+}
+
+.registrantName {
+  font-size: $font-size-base;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  display: block;
+}
+
+.registrantMeta {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  display: block;
+  margin-top: 4rpx;
+}
+
+.cancelBtn {
+  flex: 0;
+  padding: $spacing-xs $spacing-md;
+  background: rgba(#D32F2F, 0.1);
+  color: #D32F2F;
+  font-size: $font-size-sm;
+  width: auto;
+}
