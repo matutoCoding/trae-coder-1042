@@ -7,8 +7,8 @@ import MemberCard from '@/components/MemberCard';
 import EventCard from '@/components/EventCard';
 import SectionHeader from '@/components/SectionHeader';
 import StatCard from '@/components/StatCard';
-import { members, memberCards, expenseRecords } from '@/data/members';
-import { events } from '@/data/events';
+import { useStore } from '@/store';
+import { members, memberCards } from '@/data/members';
 import type { Member, MemberCard as MemberCardType, ExpenseRecord, Event, QuickEntryItem, StatItem } from '@/types';
 import { formatMoney, getLevelColor, getStatusColor } from '@/utils';
 
@@ -27,26 +27,26 @@ const quickEntries: QuickEntryItem[] = [
 ];
 
 const MemberPage: React.FC = () => {
+  const { state } = useStore();
   const [activeTab, setActiveTab] = useState('members');
   const [memberList, setMemberList] = useState<Member[]>([]);
   const [cardList, setCardList] = useState<MemberCardType[]>([]);
-  const [expenseList, setExpenseList] = useState<ExpenseRecord[]>([]);
-  const [eventList, setEventList] = useState<Event[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  const expenseList = state.expenseRecords;
+  const eventList = state.events;
+
   const stats: StatItem[] = [
-    { label: '会员总数', value: '8', unit: '人' },
+    { label: '会员总数', value: String(state.members.length), unit: '人' },
     { label: '今日消费', value: '3,280', unit: '元' },
     { label: '本月收入', value: '56,800', unit: '元' },
   ];
 
   const loadData = useCallback(() => {
     console.log('[MemberPage] 加载数据');
-    setMemberList(members);
+    setMemberList(state.members.length ? state.members : members);
     setCardList(memberCards);
-    setExpenseList(expenseRecords);
-    setEventList(events);
-  }, []);
+  }, [state.members]);
 
   useEffect(() => {
     loadData();
@@ -119,7 +119,7 @@ const MemberPage: React.FC = () => {
         <Text className={styles.subText}>高效管理会员，提升服务质量</Text>
         <View className={styles.statsRow}>
           <View className={styles.statItem}>
-            <Text className={styles.statValue}>{memberList.length}</Text>
+            <Text className={styles.statValue}>{state.members.length}</Text>
             <Text className={styles.statLabel}>会员总数</Text>
           </View>
           <View className={styles.statItem}>

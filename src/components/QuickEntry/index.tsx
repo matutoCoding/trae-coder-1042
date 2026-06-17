@@ -8,11 +8,16 @@ import type { QuickEntryItem } from '@/types';
 interface QuickEntryProps {
   data: QuickEntryItem[];
   columns?: number;
+  onItemClick?: (item: QuickEntryItem) => void;
 }
 
-const QuickEntry: React.FC<QuickEntryProps> = ({ data, columns = 4 }) => {
+const QuickEntry: React.FC<QuickEntryProps> = ({ data, columns = 4, onItemClick }) => {
   const handleItemClick = (item: QuickEntryItem) => {
     console.log('[QuickEntry] 点击:', item.name);
+    if (onItemClick) {
+      onItemClick(item);
+      return;
+    }
     if (item.path) {
       Taro.navigateTo({ url: item.path }).catch((err) => {
         console.error('[QuickEntry] 跳转失败:', err);

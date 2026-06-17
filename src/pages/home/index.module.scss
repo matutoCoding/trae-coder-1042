@@ -142,23 +142,16 @@
 }
 
 .addBtn {
-  @include button-reset;
   position: fixed;
   bottom: 120rpx;
   right: $page-padding;
-  width: 112rpx;
-  height: 112rpx;
+  width: 96rpx;
+  height: 96rpx;
   border-radius: $radius-round;
   background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
   color: $color-text-inverse;
-  font-size: 56rpx;
-  font-weight: $font-weight-light;
   box-shadow: $shadow-float;
   z-index: 99;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
 
   &:active {
     transform: scale(0.95);
@@ -179,4 +172,112 @@
 .emptyText {
   font-size: $font-size-base;
   margin-top: $spacing-md;
+}
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-lg;
+}
+
+.modalContent {
+  background: $color-bg-card;
+  border-radius: $radius-xl;
+  width: 100%;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modalTitle {
+  font-size: $font-size-subtitle;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  text-align: center;
+  padding: $spacing-lg;
+  border-bottom: 1rpx solid $color-border-light;
+}
+
+.modalScroll {
+  flex: 1;
+  padding: $spacing-lg;
+  max-height: 60vh;
+}
+
+.modalFooter {
+  display: flex;
+  gap: $spacing-md;
+  padding: $spacing-md $spacing-lg $spacing-lg;
+  border-top: 1rpx solid $color-border-light;
+}
+
+.modalBtn {
+  flex: 1;
+  padding: $spacing-sm;
+  border-radius: $radius-button;
+  text-align: center;
+  font-size: $font-size-base;
+  font-weight: $font-weight-medium;
+
+  &:active {
+    opacity: 0.85;
+    transform: scale(0.98);
+    transition: all $transition-base;
+  }
+}
+
+.modalBtnPrimary {
+  background: $color-primary;
+  color: $color-text-inverse;
+}
+
+.modalBtnCancel {
+  background: $color-bg-secondary;
+  color: $color-text-secondary;
+}
+
+.formLabel {
+  display: block;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  margin-bottom: $spacing-sm;
+  margin-top: $spacing-md;
+}
+
+.formLabel:first-of-type {
+  margin-top: 0;
+}
+
+.formInput {
+  width: 100%;
+  height: 80rpx;
+  padding: 0 $spacing-md;
+  background: $color-bg-secondary;
+  border-radius: $radius-md;
+  font-size: $font-size-base;
+  color: $color-text-primary;
+  box-sizing: border-box;
+}
+
+.formPicker {
+  width: 100%;
+  height: 80rpx;
+  padding: 0 $spacing-md;
+  background: $color-bg-secondary;
+  border-radius: $radius-md;
+  display: flex;
+  align-items: center;
+  font-size: $font-size-base;
+  color: $color-text-primary;
+  box-sizing: border-box;
 }
