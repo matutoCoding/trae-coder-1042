@@ -29,13 +29,16 @@ const quickEntries: QuickEntryItem[] = [
 const paymentOptions = ['余额支付', '微信支付', '支付宝', '现金', '银行卡'];
 
 const MemberPage: React.FC = () => {
-  const { state, rechargeMember, deductMemberHours, getExpenseById, getMemberById } = useStore();
+  const store = useStore();
+  const { state } = store;
+  const doRecharge = store.rechargeMember;
+  const doDeduct = store.deductMemberHours;
+
   const [activeTab, setActiveTab] = useState('members');
   const [cardList, setCardList] = useState<MemberCardType[]>([]);
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const [rechargeVisible, setRechargeVisible] = useState(false);
-  const [rechargeMember, setRechargeMember] = useState<Member | null>(null);
+  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [rechargeAmount, setRechargeAmount] = useState('');
   const [rechargePayIdx, setRechargePayIdx] = useState(0);
 
@@ -67,10 +70,8 @@ const MemberPage: React.FC = () => {
   });
 
   usePullDownRefresh(() => {
-    setIsRefreshing(true);
     setTimeout(() => {
       loadData();
-      setIsRefreshing(false);
       Taro.stopPullDownRefresh().catch(console.error);
     }, 800);
   });
@@ -114,20 +115,20 @@ const MemberPage: React.FC = () => {
 
   const openRecharge = (member: Member, e: any) => {
     e.stopPropagation?.();
-    setRechargeMember(member);
+    setSelectedMember(member);
     setRechargeAmount('');
     setRechargePayIdx(0);
     setRechargeVisible(true);
   };
 
   const submitRecharge = () => {
-    if (!rechargeMember) return;
+    if (!selectedMember) return;
     const amount = Number(rechargeAmount);
     if (!amount || amount <= 0) {
       Taro.showToast({ title: '请输入有效金额', icon: 'none' }).catch(console.error);
       return;
     }
-    const res = rechargeMember(rechargeMember.id, amount, paymentOptions[rechargePayIdx] as any);
+    const res = doRecharge(selectedMember.id, amount, paymentOptions[rechargePayIdx] as any);
     if (res.success) {
       Taro.showToast({ title: res.message, icon: 'success' }).catch(console.error);
       setRechargeVisible(false);
@@ -148,29 +149,19 @@ const MemberPage: React.FC = () => {
     if (!deductMember) return;
     const hours = Number(deductHours);
     if (!hours || hours <= 0) {
-      Taro.showToast({ title: '请输入有效课时', icon: 'none' }).catch(console.error);
+      Taro.showToast({ title: '请输入有效课时数', icon: 'none' }).catch(console.error);
       return;
     }
     if (hours > deductMember.remainingHours) {
-      Taro.showModal({
-        title: '课时不足',
-        content: `该会员剩余课时仅 ${deductMember.remainingHours} 节，是否继续扣减？`,
-        confirmText: '继续扣减',
-        success: (r) => {
-          if (r.confirm) {
-            doDeduct(hours);
-          }
-        },
+      Taro.showToast({
+        title: `课时不足，该会员仅剩 ${deductMember.remainingHours} 节`,
+        icon: 'none',
+        duration: 2000,
       }).catch(console.error);
       return;
     }
-    doDeduct(hours);
-  };
-
-  const doDeduct = (hours: number) => {
-    if (!deductMember) return;
     const desc = deductDesc.trim() || '课程消耗';
-    const res = deductMemberHours(deductMember.id, hours, desc);
+    const res = doDeduct(deductMember.id, hours, desc);
     if (res.success) {
       Taro.showToast({ title: res.message, icon: 'success' }).catch(console.error);
       setDeductVisible(false);
@@ -345,7 +336,9 @@ const MemberPage: React.FC = () => {
                     >
                       <Text>{record.type}</Text>
                     </View>
-                    <Text className={styles.expenseAmount}>{formatMoney(record.amount)}</Text>
+                    <Text className={styles.expenseAmount}>
+                      {record.type === '赛事退款' ? '-' : ''}{formatMoney(record.amount)}
+                    </Text>
                   </View>
                 </View>
                 <Text className={styles.expenseDesc}>{record.description}</Text>
@@ -353,7 +346,9 @@ const MemberPage: React.FC = () => {
                   会员：{record.memberName}
                 </Text>
                 <View className={styles.expenseFooter}>
-                  <Text className={styles.expenseDate}>{record.date}</Text>
+                  <Text className={styles.expenseDate}>
+                    {record.time ? `${record.date.split(' ')[0]} ${record.time}` : record.date}
+                  </Text>
                   <View className={styles.paymentMethod}>
                     <Text>{record.paymentMethod}</Text>
                   </View>
@@ -375,7 +370,7 @@ const MemberPage: React.FC = () => {
         </View>
       )}
 
-      {rechargeVisible && rechargeMember && (
+      {rechargeVisible && selectedMember && (
         <View className={styles.modalMask} onClick={() => setRechargeVisible(false)}>
           <View className={styles.modal} onClick={(e) => e.stopPropagation?.()}>
             <View className={styles.modalHeader}>
@@ -385,12 +380,12 @@ const MemberPage: React.FC = () => {
             <View className={styles.modalBody}>
               <View className={styles.modalMemberRow}>
                 <View className={styles.modalMemberAvatar}>
-                  <Text>{rechargeMember.name.charAt(0)}</Text>
+                  <Text>{selectedMember.name.charAt(0)}</Text>
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text className={styles.modalMemberName}>{rechargeMember.name}</Text>
+                  <Text className={styles.modalMemberName}>{selectedMember.name}</Text>
                   <Text className={styles.modalMemberMeta}>
-                    {rechargeMember.memberLevel} · 剩余课时 {rechargeMember.remainingHours} 节
+                    {selectedMember.memberLevel} · 剩余课时 {selectedMember.remainingHours} 节
                   </Text>
                 </View>
               </View>
@@ -478,7 +473,7 @@ const MemberPage: React.FC = () => {
               </View>
 
               <View className={styles.formHint}>
-                <Text>扣减后会员剩余课时同步减少，并在消费台账生成记录</Text>
+                <Text>课时不足时将直接拦截，扣减后剩余课时同步减少并在消费台账生成记录</Text>
               </View>
             </View>
             <View className={styles.modalFooter}>

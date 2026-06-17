@@ -7,7 +7,7 @@ import styles from './index.module.scss';
 
 const ExpenseDetailPage: React.FC = () => {
   const router = useRouter();
-  const { state, getExpenseById, getMemberById, getEquipmentById, getEventById, getRentalById } = useStore();
+  const { state, getExpenseById, getMemberById, getEquipmentById, getEventById } = useStore();
   const expenseId = router.params.id || '';
   const [expense, setExpense] = useState<any>(null);
   const [member, setMember] = useState<any>(null);
@@ -66,7 +66,6 @@ const ExpenseDetailPage: React.FC = () => {
       会员充值: '💳',
       课时扣减: '⏱️',
       商品购买: '🛒',
-      其他消费: '💰',
       其他: '💰',
     };
     return icons[type] || '💰';
@@ -87,6 +86,23 @@ const ExpenseDetailPage: React.FC = () => {
     return colors[type] || '#86909C';
   };
 
+  const getDisplayTime = (exp: any) => {
+    if (!exp.date) return '-';
+    const datePart = exp.date.includes(' ') ? exp.date.split(' ')[0] : exp.date;
+    if (exp.time) {
+      return `${datePart} ${exp.time}`;
+    }
+    if (exp.date.includes(' ')) {
+      return exp.date;
+    }
+    return exp.date;
+  };
+
+  const getDisplayAmount = (exp: any) => {
+    const prefix = exp.type === '赛事退款' ? '-' : '';
+    return `${prefix}¥${exp.amount.toLocaleString('zh-CN')}`;
+  };
+
   if (!expense) {
     return (
       <View className={styles.pageContainer}>
@@ -97,10 +113,6 @@ const ExpenseDetailPage: React.FC = () => {
       </View>
     );
   }
-
-  const displayTime = expense.time
-    ? `${expense.date} ${expense.time}`
-    : expense.date;
 
   return (
     <View className={styles.pageContainer}>
@@ -120,9 +132,7 @@ const ExpenseDetailPage: React.FC = () => {
           <Text className={styles.amountLabel}>
             {expense.type === '赛事退款' ? '退款金额' : expense.type === '会员充值' ? '充值金额' : '消费金额'}
           </Text>
-          <Text className={styles.amountValue}>
-            {expense.type === '赛事退款' ? '-' : ''}¥{formatMoney(expense.amount)}
-          </Text>
+          <Text className={styles.amountValue}>{getDisplayAmount(expense)}</Text>
         </View>
         <View className={styles.statusBadge} style={{ background: getStatusColor(expense.status) }}>
           {expense.status}
@@ -143,7 +153,7 @@ const ExpenseDetailPage: React.FC = () => {
         </View>
         <View className={styles.infoRow}>
           <Text className={styles.infoLabel}>消费时间</Text>
-          <Text className={styles.infoValue}>{displayTime}</Text>
+          <Text className={styles.infoValue}>{getDisplayTime(expense)}</Text>
         </View>
         <View className={styles.infoRow}>
           <Text className={styles.infoLabel}>支付方式</Text>
@@ -234,7 +244,7 @@ const ExpenseDetailPage: React.FC = () => {
               <Text className={styles.memberMeta}>
                 🏅 {member.memberLevel} | 剩余课时 {member.remainingHours} 节
               </Text>
-              <Text className={styles.memberMeta}>💰 累计消费 ¥{formatMoney(member.totalSpent)}</Text>
+              <Text className={styles.memberMeta}>💰 累计消费 ¥{member.totalSpent.toLocaleString('zh-CN')}</Text>
             </View>
           </View>
         </View>
