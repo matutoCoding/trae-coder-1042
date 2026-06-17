@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { View, Text, Input, Picker } from '@tarojs/components';
-import Taro, { useRouter, useDidShow, usePullDownRefresh } from '@tarojs/taro';
+import Taro, { useRouter, useDidShow } from '@tarojs/taro';
 import { useStore } from '@/store';
-import { formatMoney, getLevelColor, getStatusColor } from '@/utils';
+import { getLevelColor, getStatusColor } from '@/utils';
 import styles from './index.module.scss';
+import classNames from 'classnames';
 
 const paymentOptions = ['余额支付', '微信支付', '支付宝', '现金', '银行卡'];
 
-const MemberDetailPage: React.FC = () => {
+const MemberDetailPage = () => {
   const router = useRouter();
   const store = useStore();
   const { state } = store;
@@ -27,19 +28,18 @@ const MemberDetailPage: React.FC = () => {
   const loadData = () => {
     const mem = store.getMemberById(memberId);
     setMember(mem || null);
-    const memberExpenses = state.expenseRecords.filter(
-      (r) => r.memberId === memberId
-    );
-    setExpenses(memberExpenses.slice(0, 10));
+    if (mem) {
+      const memberExpenses = state.expenseRecords.filter(
+        (r: any) => r.memberId === memberId
+      );
+      setExpenses(memberExpenses.slice(0, 10));
+    } else {
+      setExpenses([]);
+    }
   };
 
   useDidShow(() => {
     loadData();
-  });
-
-  usePullDownRefresh(() => {
-    loadData();
-    Taro.stopPullDownRefresh().catch(console.error);
   });
 
   const handleExpenseClick = (id: string) => {
@@ -57,7 +57,7 @@ const MemberDetailPage: React.FC = () => {
     if (res.success) {
       Taro.showToast({ title: res.message, icon: 'success' }).catch(console.error);
       setRechargeVisible(false);
-      setTimeout(() => loadData(), 300);
+      loadData();
     } else {
       Taro.showToast({ title: res.message, icon: 'none' }).catch(console.error);
     }
@@ -72,7 +72,7 @@ const MemberDetailPage: React.FC = () => {
     }
     if (hours > member.remainingHours) {
       Taro.showToast({
-        title: `课时不足，该会员仅剩 ${member.remainingHours} 节`,
+        title: `课时不足，剩余${member.remainingHours}节`,
         icon: 'none',
         duration: 2000,
       }).catch(console.error);
@@ -83,7 +83,7 @@ const MemberDetailPage: React.FC = () => {
     if (res.success) {
       Taro.showToast({ title: res.message, icon: 'success' }).catch(console.error);
       setDeductVisible(false);
-      setTimeout(() => loadData(), 300);
+      loadData();
     } else {
       Taro.showToast({ title: res.message, icon: 'none' }).catch(console.error);
     }
@@ -103,6 +103,12 @@ const MemberDetailPage: React.FC = () => {
     return colorMap[type] || '#86909C';
   };
 
+  const getAmountPrefix = (type: string) => {
+    if (type === '赛事退款') return '-';
+    if (type === '会员充值') return '+';
+    return '';
+  };
+
   if (!member) {
     return (
       <View className={styles.pageContainer}>
@@ -120,7 +126,7 @@ const MemberDetailPage: React.FC = () => {
         <View className={styles.avatarWrap}>
           <Text className={styles.avatarText}>{member.name.charAt(0)}</Text>
         </View>
-        <View style={{ flex: 1 }}>
+        <View className={styles.headerInfo}>
           <View className={styles.nameRow}>
             <Text className={styles.memberName}>{member.name}</Text>
             <View
@@ -156,10 +162,10 @@ const MemberDetailPage: React.FC = () => {
       </View>
 
       <View className={styles.actionRow}>
-        <View className={styles.actionBtnPrimary} onClick={() => { setRechargeAmount(''); setRechargePayIdx(0); setRechargeVisible(true); }}>
+        <View className={classNames(styles.actionBtn, styles.actionBtnPrimary)} onClick={() => { setRechargeAmount(''); setRechargePayIdx(0); setRechargeVisible(true); }}>
           <Text>💳 充值</Text>
         </View>
-        <View className={styles.actionBtnSecondary} onClick={() => { setDeductHours(''); setDeductDesc(''); setDeductVisible(true); }}>
+        <View className={classNames(styles.actionBtn, styles.actionBtnSecondary)} onClick={() => { setDeductHours(''); setDeductDesc(''); setDeductVisible(true); }}>
           <Text>⏱️ 扣课时</Text>
         </View>
       </View>
@@ -181,19 +187,13 @@ const MemberDetailPage: React.FC = () => {
           <Text className={styles.infoValue}>{member.joinDate}</Text>
         </View>
         <View className={styles.infoRow}>
-          <Text className={styles.infoLabel">有效期至</Text>
+          <Text className={styles.infoLabel}>有效期至</Text>
           <Text className={styles.infoValue}>{member.expiryDate}</Text>
         </View>
         {member.address && (
           <View className={styles.infoRow}>
             <Text className={styles.infoLabel}>地址</Text>
             <Text className={styles.infoValue}>{member.address}</Text>
-          </View>
-        )}
-        {member.emergencyContact && (
-          <View className={styles.infoRow}>
-            <Text className={styles.infoLabel}>紧急联系人</Text>
-            <Text className={styles.infoValue}>{member.emergencyContact} {member.emergencyPhone}</Text>
           </View>
         )}
       </View>
@@ -203,41 +203,42 @@ const MemberDetailPage: React.FC = () => {
           <Text className={styles.cardTitleText}>最近消费</Text>
           <Text className={styles.cardTitleSub}>{expenses.length} 条</Text>
         </View>
-        {expenses.length === 0 && (
+        {expenses.length === 0 ? (
           <View className={styles.emptyBox}>
             <Text className={styles.emptyBoxText}>暂无消费记录</Text>
           </View>
-        )}
-        {expenses.map((record) => (
-          <View
-            key={record.id}
-            className={styles.expenseItem}
-            onClick={() => handleExpenseClick(record.id)}
-          >
-            <View className={styles.expenseLeft}>
-              <View
-                className={styles.expenseTypeTag}
-                style={{ backgroundColor: getExpenseTypeColor(record.type) + '20', color: getExpenseTypeColor(record.type) }}
-              >
-                <Text>{record.type}</Text>
+        ) : (
+          expenses.map((record) => (
+            <View
+              key={record.id}
+              className={styles.expenseItem}
+              onClick={() => handleExpenseClick(record.id)}
+            >
+              <View className={styles.expenseLeft}>
+                <View
+                  className={styles.expenseTypeTag}
+                  style={{ backgroundColor: getExpenseTypeColor(record.type) + '20', color: getExpenseTypeColor(record.type) }}
+                >
+                  <Text>{record.type}</Text>
+                </View>
+                <Text className={styles.expenseDesc}>{record.description}</Text>
               </View>
-              <Text className={styles.expenseDesc}>{record.description}</Text>
+              <View className={styles.expenseRight}>
+                <Text className={styles.expenseAmount} style={{ color: record.type === '赛事退款' ? '#D32F2F' : (record.type === '会员充值' ? '#1976D2' : '#2E8B57') }}>
+                  {getAmountPrefix(record.type)}¥{record.amount.toLocaleString('zh-CN')}
+                </Text>
+                <Text className={styles.expenseTime}>
+                  {record.date}
+                </Text>
+              </View>
             </View>
-            <View className={styles.expenseRight}>
-              <Text className={styles.expenseAmount} style={{ color: record.type === '赛事退款' ? '#D32F2F' : '#2E8B57' }}>
-                {record.type === '赛事退款' ? '-' : record.type === '会员充值' ? '+' : ''}¥{record.amount.toLocaleString('zh-CN')}
-              </Text>
-              <Text className={styles.expenseTime}>
-                {record.time ? `${record.date.split(' ')[0]} ${record.time}` : record.date}
-              </Text>
-            </View>
-          </View>
-        ))}
+          ))
+        )}
       </View>
 
       {rechargeVisible && (
         <View className={styles.modalMask} onClick={() => setRechargeVisible(false)}>
-          <View className={styles.modal} onClick={(e) => e.stopPropagation?.()}>
+          <View className={styles.modal} onClick={(e) => e.stopPropagation()}>
             <View className={styles.modalHeader}>
               <Text className={styles.modalTitle}>会员充值</Text>
               <Text className={styles.modalClose} onClick={() => setRechargeVisible(false)}>✕</Text>
@@ -281,7 +282,7 @@ const MemberDetailPage: React.FC = () => {
 
       {deductVisible && (
         <View className={styles.modalMask} onClick={() => setDeductVisible(false)}>
-          <View className={styles.modal} onClick={(e) => e.stopPropagation?.()}>
+          <View className={styles.modal} onClick={(e) => e.stopPropagation()}>
             <View className={styles.modalHeader}>
               <Text className={styles.modalTitle}>课时扣减</Text>
               <Text className={styles.modalClose} onClick={() => setDeductVisible(false)}>✕</Text>

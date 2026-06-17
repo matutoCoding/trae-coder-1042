@@ -585,7 +585,7 @@ const StablePage: React.FC = () => {
                 </View>
                 <View className={styles.rentalFooter}>
                   <Text style={{ fontSize: '30rpx', color: '#8B4513', fontWeight: '600' }}>
-                    ¥{formatMoney(rental.totalAmount)}
+                    ¥{rental.totalAmount.toLocaleString('zh-CN')}
                   </Text>
                   {rental.status === '租赁中' && (
                     <View
