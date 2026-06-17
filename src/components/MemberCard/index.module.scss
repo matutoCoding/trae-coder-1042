@@ -1,0 +1,94 @@
+@use '@/styles/variables.scss' as *;
+
+.memberCard {
+  @include card-style;
+  display: flex;
+  align-items: center;
+  padding: $spacing-md;
+  margin-bottom: $spacing-md;
+  cursor: pointer;
+
+  &:active {
+    transform: scale(0.99);
+    opacity: 0.95;
+    transition: all $transition-base;
+  }
+}
+
+.memberAvatar {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: $radius-round;
+  flex-shrink: 0;
+  margin-right: $spacing-md;
+  background: $color-bg-secondary;
+}
+
+.memberInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.memberHeader {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-xs;
+}
+
+.memberName {
+  font-size: $font-size-title;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  @include text-ellipsis;
+  max-width: 200rpx;
+}
+
+.levelTag {
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $radius-sm;
+  font-size: $font-size-xs;
+  white-space: nowrap;
+}
+
+.memberPhone {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  margin-bottom: $spacing-md;
+}
+
+.memberStats {
+  display: flex;
+  align-items: center;
+  gap: $spacing-lg;
+}
+
+.statItem {
+  display: flex;
+  flex-direction: column;
+}
+
+.statValue {
+  font-size: $font-size-subtitle;
+  font-weight: $font-weight-semibold;
+  color: $color-primary;
+}
+
+.statLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.statDivider {
+  width: 1rpx;
+  height: 48rpx;
+  background: $color-border-light;
+}
+
+.statusTag {
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $radius-sm;
+  font-size: $font-size-xs;
+  white-space: nowrap;
+  margin-left: $spacing-sm;
+}

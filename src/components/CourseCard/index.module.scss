@@ -1,0 +1,101 @@
+@use '@/styles/variables.scss' as *;
+
+.courseCard {
+  @include card-style;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+  cursor: pointer;
+
+  &:active {
+    transform: scale(0.99);
+    opacity: 0.95;
+    transition: all $transition-base;
+  }
+}
+
+.cardHeader {
+  @include flex-between;
+  margin-bottom: $spacing-md;
+}
+
+.courseType {
+  font-size: $font-size-sm;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+  background: $color-tag-bg;
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $radius-sm;
+}
+
+.levelTag {
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $radius-sm;
+  font-size: $font-size-xs;
+  white-space: nowrap;
+}
+
+.courseName {
+  font-size: $font-size-title;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-sm;
+  @include text-ellipsis;
+}
+
+.courseMeta {
+  display: flex;
+  gap: $spacing-lg;
+  margin-bottom: $spacing-lg;
+}
+
+.metaItem {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.progressSection {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  margin-bottom: $spacing-lg;
+}
+
+.progressBar {
+  flex: 1;
+  height: 8rpx;
+  background: $color-bg-secondary;
+  border-radius: $radius-round;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, $color-primary 0%, $color-accent 100%);
+  border-radius: $radius-round;
+  transition: width $transition-slow;
+}
+
+.progressText {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  white-space: nowrap;
+}
+
+.cardFooter {
+  @include flex-between;
+  padding-top: $spacing-md;
+  border-top: 1rpx solid $color-border-light;
+}
+
+.price {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+}
+
+.statusTag {
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $radius-sm;
+  font-size: $font-size-xs;
+  white-space: nowrap;
+}

@@ -1,0 +1,39 @@
+@use '@/styles/variables.scss' as *;
+
+.quickGrid {
+  display: grid;
+  gap: $spacing-lg;
+  padding: $spacing-lg $spacing-md;
+  @include card-style;
+}
+
+.quickItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+
+  &:active {
+    opacity: 0.7;
+    transform: scale(0.95);
+    transition: all $transition-base;
+  }
+}
+
+.quickIcon {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: $radius-xl;
+  @include flex-center;
+  margin-bottom: $spacing-sm;
+  font-size: 40rpx;
+  font-weight: $font-weight-semibold;
+}
+
+.quickName {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  text-align: center;
+  @include text-ellipsis;
+  max-width: 120rpx;
+}

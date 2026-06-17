@@ -1,0 +1,124 @@
+@use '@/styles/variables.scss' as *;
+
+.eventCard {
+  @include card-style;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+  cursor: pointer;
+
+  &:active {
+    transform: scale(0.99);
+    opacity: 0.95;
+    transition: all $transition-base;
+  }
+}
+
+.cardHeader {
+  @include flex-between;
+  margin-bottom: $spacing-md;
+}
+
+.typeTag {
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $radius-sm;
+  font-size: $font-size-xs;
+  white-space: nowrap;
+}
+
+.statusTag {
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $radius-sm;
+  font-size: $font-size-xs;
+  white-space: nowrap;
+}
+
+.eventName {
+  font-size: $font-size-title;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+  @include text-ellipsis;
+  line-height: 1.4;
+}
+
+.eventMeta {
+  margin-bottom: $spacing-lg;
+}
+
+.metaRow {
+  display: flex;
+  align-items: center;
+  margin-bottom: $spacing-sm;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.metaIcon {
+  font-size: $font-size-base;
+  margin-right: $spacing-sm;
+}
+
+.metaText {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.progressSection {
+  margin-bottom: $spacing-lg;
+}
+
+.progressInfo {
+  @include flex-between;
+  margin-bottom: $spacing-sm;
+}
+
+.progressLabel {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.progressCount {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.progressBar {
+  height: 8rpx;
+  background: $color-bg-secondary;
+  border-radius: $radius-round;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, $color-secondary 0%, $color-accent 100%);
+  border-radius: $radius-round;
+  transition: width $transition-slow;
+}
+
+.cardFooter {
+  @include flex-between;
+  padding-top: $spacing-md;
+  border-top: 1rpx solid $color-border-light;
+}
+
+.price {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+}
+
+.detailBtn {
+  display: flex;
+  align-items: center;
+  font-size: $font-size-sm;
+  color: $color-primary;
+}
+
+.arrow {
+  margin-left: $spacing-xs;
+  font-size: $font-size-base;
+  font-weight: $font-weight-bold;
+}

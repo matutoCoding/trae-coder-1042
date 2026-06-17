@@ -1,0 +1,94 @@
+@use '@/styles/variables.scss' as *;
+
+.pageContainer {
+  padding: 0 $page-padding;
+  padding-bottom: $spacing-xxl;
+  min-height: 100vh;
+}
+
+.statsSection {
+  display: flex;
+  gap: $spacing-md;
+  margin-bottom: $spacing-xl;
+  padding-top: $spacing-lg;
+}
+
+.typeTabs {
+  display: flex;
+  gap: $spacing-md;
+  margin-bottom: $spacing-lg;
+  overflow-x: auto;
+  @include scroll-x-container;
+}
+
+.typeTab {
+  @include scroll-x-item(auto);
+  padding: $spacing-sm $spacing-lg;
+  border-radius: $radius-button;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  background: $color-bg-card;
+  white-space: nowrap;
+  margin-right: $spacing-sm;
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-xs;
+  transition: all $transition-base;
+
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+.typeTabActive {
+  background: $color-primary;
+  color: $color-text-inverse;
+}
+
+.tabIcon {
+  font-size: $font-size-base;
+}
+
+.section {
+  margin-bottom: $spacing-xl;
+}
+
+.addBtn {
+  @include button-reset;
+  position: fixed;
+  bottom: 120rpx;
+  right: $page-padding;
+  width: 112rpx;
+  height: 112rpx;
+  border-radius: $radius-round;
+  background: linear-gradient(135deg, $color-secondary 0%, $color-secondary-light 100%);
+  color: $color-text-inverse;
+  font-size: 56rpx;
+  font-weight: $font-weight-light;
+  box-shadow: $shadow-float;
+  z-index: 99;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+
+  &:active {
+    transform: scale(0.95);
+    opacity: 0.9;
+  }
+}
+
+.listContainer {
+  padding-bottom: 160rpx;
+}
+
+.emptyState {
+  padding: $spacing-xxl * 2;
+  text-align: center;
+  color: $color-text-tertiary;
+}
+
+.emptyText {
+  font-size: $font-size-base;
+  margin-top: $spacing-md;
+}

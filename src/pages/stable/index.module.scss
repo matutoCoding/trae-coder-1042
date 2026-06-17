@@ -1,0 +1,250 @@
+@use '@/styles/variables.scss' as *;
+
+.pageContainer {
+  padding: 0 $page-padding;
+  padding-bottom: $spacing-xxl;
+  min-height: 100vh;
+  padding-top: $spacing-lg;
+}
+
+.quickSection {
+  margin-bottom: $spacing-xl;
+}
+
+.tabs {
+  display: flex;
+  background: $color-bg-card;
+  border-radius: $radius-button;
+  padding: $spacing-xs;
+  margin-bottom: $spacing-lg;
+}
+
+.tabItem {
+  flex: 1;
+  padding: $spacing-sm $spacing-md;
+  text-align: center;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  border-radius: $radius-button;
+  transition: all $transition-base;
+}
+
+.tabItemActive {
+  background: $color-primary;
+  color: $color-text-inverse;
+  font-weight: $font-weight-semibold;
+}
+
+.section {
+  margin-bottom: $spacing-xl;
+}
+
+.stableGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $spacing-md;
+}
+
+.stableCard {
+  @include card-style;
+  padding: $spacing-lg;
+  cursor: pointer;
+
+  &:active {
+    transform: scale(0.98);
+    opacity: 0.95;
+    transition: all $transition-base;
+  }
+}
+
+.stableHeader {
+  @include flex-between;
+  margin-bottom: $spacing-md;
+}
+
+.stableNo {
+  font-size: $font-size-title;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+}
+
+.statusTag {
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $radius-sm;
+  font-size: $font-size-xs;
+  white-space: nowrap;
+}
+
+.statusOccupied {
+  background: rgba(46, 139, 87, 0.1);
+  color: #2E8B57;
+}
+
+.statusEmpty {
+  background: rgba(25, 118, 210, 0.1);
+  color: #1976D2;
+}
+
+.statusRepair {
+  background: rgba(211, 47, 47, 0.1);
+  color: #D32F2F;
+}
+
+.horseName {
+  font-size: $font-size-base;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  margin-bottom: $spacing-xs;
+}
+
+.stableInfo {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-bottom: $spacing-xs;
+}
+
+.stableFooter {
+  @include flex-between;
+  margin-top: $spacing-md;
+  padding-top: $spacing-md;
+  border-top: 1rpx solid $color-border-light;
+}
+
+.cleanDate {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+}
+
+.size {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.feedingList {
+  padding-bottom: 120rpx;
+}
+
+.feedingCard {
+  @include card-style;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+}
+
+.feedingHeader {
+  @include flex-between;
+  margin-bottom: $spacing-md;
+}
+
+.feedingHorse {
+  font-size: $font-size-subtitle;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.feedingTime {
+  font-size: $font-size-sm;
+  color: $color-primary;
+  background: $color-tag-bg;
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $radius-sm;
+}
+
+.feedingContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.feedType {
+  font-size: $font-size-base;
+  color: $color-text-secondary;
+}
+
+.feedQuantity {
+  font-size: $font-size-base;
+  font-weight: $font-weight-semibold;
+  color: $color-secondary;
+}
+
+.feedingOperator {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: $spacing-sm;
+}
+
+.equipmentList {
+  padding-bottom: 120rpx;
+}
+
+.equipmentCard {
+  @include card-style;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  cursor: pointer;
+
+  &:active {
+    transform: scale(0.99);
+    opacity: 0.95;
+    transition: all $transition-base;
+  }
+}
+
+.equipmentIcon {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: $radius-lg;
+  background: $color-tag-bg;
+  @include flex-center;
+  font-size: 40rpx;
+  flex-shrink: 0;
+}
+
+.equipmentInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.equipmentName {
+  font-size: $font-size-subtitle;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-xs;
+  @include text-ellipsis;
+}
+
+.equipmentMeta {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin-bottom: $spacing-xs;
+}
+
+.equipmentStock {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.stockText {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.price {
+  font-size: $font-size-base;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+}
+
+.emptyState {
+  padding: $spacing-xxl * 2;
+  text-align: center;
+  color: $color-text-tertiary;
+}
+
+.emptyText {
+  font-size: $font-size-base;
+  margin-top: $spacing-md;
+}

@@ -1,0 +1,89 @@
+@use '@/styles/variables.scss' as *;
+
+.healthCard {
+  @include card-style;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+  cursor: pointer;
+
+  &:active {
+    transform: scale(0.99);
+    opacity: 0.95;
+    transition: all $transition-base;
+  }
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  margin-bottom: $spacing-md;
+}
+
+.typeIcon {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: $radius-lg;
+  background: $color-bg-secondary;
+  @include flex-center;
+  font-size: 36rpx;
+  margin-right: $spacing-md;
+}
+
+.typeInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.typeText {
+  font-size: $font-size-subtitle;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-xs;
+}
+
+.horseName {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.statusTag {
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $radius-sm;
+  font-size: $font-size-xs;
+  white-space: nowrap;
+}
+
+.description {
+  font-size: $font-size-base;
+  color: $color-text-secondary;
+  line-height: 1.6;
+  margin-bottom: $spacing-lg;
+  @include text-ellipsis-multi(2);
+}
+
+.cardFooter {
+  display: flex;
+  justify-content: space-between;
+  padding-top: $spacing-md;
+  border-top: 1rpx solid $color-border-light;
+}
+
+.footerItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.footerLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-bottom: $spacing-xs;
+}
+
+.footerValue {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+}

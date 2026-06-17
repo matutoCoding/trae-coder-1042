@@ -1,0 +1,62 @@
+@use '@/styles/variables.scss' as *;
+
+.statCard {
+  @include card-style;
+  padding: $spacing-lg;
+  flex: 1;
+  min-width: 150rpx;
+
+  &:active {
+    transform: scale(0.98);
+    opacity: 0.95;
+    transition: all $transition-base;
+  }
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.statLabel {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  display: block;
+  margin-bottom: $spacing-sm;
+}
+
+.statValueRow {
+  display: flex;
+  align-items: baseline;
+  margin-bottom: $spacing-xs;
+}
+
+.statValue {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+  line-height: 1.2;
+}
+
+.statUnit {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-left: $spacing-xs;
+}
+
+.statTrend {
+  display: flex;
+  align-items: center;
+  font-size: $font-size-xs;
+
+  text:first-child {
+    margin-right: $spacing-xs;
+  }
+}
+
+.trendUp {
+  color: $color-success;
+}
+
+.trendDown {
+  color: $color-error;
+}

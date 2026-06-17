@@ -1,0 +1,182 @@
+@use '@/styles/variables.scss' as *;
+
+.pageContainer {
+  padding: 0 $page-padding;
+  padding-bottom: $spacing-xxl;
+  min-height: 100vh;
+}
+
+.header {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  margin: 0 (-$page-padding) $spacing-lg;
+  padding: $spacing-xl $page-padding;
+  color: $color-text-inverse;
+}
+
+.headerTop {
+  @include flex-between;
+  margin-bottom: $spacing-md;
+}
+
+.clubName {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  color: $color-text-inverse;
+}
+
+.headerDate {
+  font-size: $font-size-sm;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.headerStats {
+  display: flex;
+  justify-content: space-between;
+  margin-top: $spacing-lg;
+}
+
+.headerStat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.statNumber {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-text-inverse;
+  margin-bottom: $spacing-xs;
+}
+
+.statLabel {
+  font-size: $font-size-xs;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.section {
+  margin-bottom: $spacing-xl;
+}
+
+.statsRow {
+  display: flex;
+  gap: $spacing-md;
+  overflow-x: auto;
+  padding-bottom: $spacing-sm;
+}
+
+.quickSection {
+  margin-bottom: $spacing-xl;
+}
+
+.breedsScroll {
+  @include scroll-x-container;
+  padding-bottom: $spacing-sm;
+}
+
+.breedCard {
+  @include scroll-x-item(300rpx);
+  @include card-style;
+  padding: $spacing-lg;
+  margin-right: $spacing-md;
+  display: inline-flex;
+  flex-direction: column;
+}
+
+.breedName {
+  font-size: $font-size-subtitle;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-sm;
+}
+
+.breedInfo {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-bottom: $spacing-sm;
+}
+
+.breedCount {
+  display: inline-flex;
+  align-items: center;
+  padding: $spacing-xs $spacing-sm;
+  background: $color-tag-bg;
+  color: $color-primary;
+  font-size: $font-size-xs;
+  border-radius: $radius-sm;
+  align-self: flex-start;
+}
+
+.breedDesc {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  line-height: 1.6;
+  @include text-ellipsis-multi(2);
+  margin-top: $spacing-sm;
+}
+
+.filterTabs {
+  display: flex;
+  gap: $spacing-md;
+  margin-bottom: $spacing-lg;
+  padding: $spacing-sm 0;
+  overflow-x: auto;
+  @include scroll-x-container;
+}
+
+.filterTab {
+  @include scroll-x-item(auto);
+  padding: $spacing-sm $spacing-lg;
+  border-radius: $radius-button;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  background: $color-bg-card;
+  white-space: nowrap;
+  margin-right: $spacing-sm;
+  transition: all $transition-base;
+}
+
+.filterTabActive {
+  background: $color-primary;
+  color: $color-text-inverse;
+}
+
+.addBtn {
+  @include button-reset;
+  position: fixed;
+  bottom: 120rpx;
+  right: $page-padding;
+  width: 112rpx;
+  height: 112rpx;
+  border-radius: $radius-round;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  color: $color-text-inverse;
+  font-size: 56rpx;
+  font-weight: $font-weight-light;
+  box-shadow: $shadow-float;
+  z-index: 99;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+
+  &:active {
+    transform: scale(0.95);
+    opacity: 0.9;
+  }
+}
+
+.listContainer {
+  padding-bottom: 160rpx;
+}
+
+.emptyState {
+  padding: $spacing-xxl * 2;
+  text-align: center;
+  color: $color-text-tertiary;
+}
+
+.emptyText {
+  font-size: $font-size-base;
+  margin-top: $spacing-md;
+}

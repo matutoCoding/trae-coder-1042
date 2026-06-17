@@ -1,0 +1,269 @@
+@use '@/styles/variables.scss' as *;
+
+.pageContainer {
+  padding: 0 $page-padding;
+  padding-bottom: $spacing-xxl;
+  min-height: 100vh;
+}
+
+.header {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  margin: 0 (-$page-padding) $spacing-xl;
+  padding: $spacing-xl $page-padding;
+  color: $color-text-inverse;
+}
+
+.welcomeText {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  color: $color-text-inverse;
+  margin-bottom: $spacing-sm;
+}
+
+.subText {
+  font-size: $font-size-sm;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: $spacing-xl;
+}
+
+.statsRow {
+  display: flex;
+  justify-content: space-around;
+}
+
+.statItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.statValue {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-text-inverse;
+  margin-bottom: $spacing-xs;
+}
+
+.statLabel {
+  font-size: $font-size-xs;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.tabs {
+  display: flex;
+  background: $color-bg-card;
+  border-radius: $radius-button;
+  padding: $spacing-xs;
+  margin-bottom: $spacing-lg;
+}
+
+.tabItem {
+  flex: 1;
+  padding: $spacing-sm $spacing-md;
+  text-align: center;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  border-radius: $radius-button;
+  transition: all $transition-base;
+}
+
+.tabItemActive {
+  background: $color-primary;
+  color: $color-text-inverse;
+  font-weight: $font-weight-semibold;
+}
+
+.section {
+  margin-bottom: $spacing-xl;
+}
+
+.quickGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $spacing-md;
+  margin-bottom: $spacing-xl;
+}
+
+.quickItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+
+  &:active {
+    opacity: 0.7;
+    transform: scale(0.95);
+    transition: all $transition-base;
+  }
+}
+
+.quickIcon {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: $radius-xl;
+  @include flex-center;
+  margin-bottom: $spacing-sm;
+  font-size: 40rpx;
+}
+
+.quickName {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  text-align: center;
+}
+
+.memberCard {
+  @include card-style;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  cursor: pointer;
+
+  &:active {
+    transform: scale(0.99);
+    opacity: 0.95;
+    transition: all $transition-base;
+  }
+}
+
+.memberAvatar {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: $radius-round;
+  flex-shrink: 0;
+  background: $color-bg-secondary;
+}
+
+.memberInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.memberNameRow {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-xs;
+}
+
+.memberName {
+  font-size: $font-size-subtitle;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.levelTag {
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $radius-sm;
+  font-size: $font-size-xs;
+  white-space: nowrap;
+}
+
+.memberPhone {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  margin-bottom: $spacing-sm;
+}
+
+.memberHours {
+  display: flex;
+  gap: $spacing-lg;
+}
+
+.hourItem {
+  display: flex;
+  flex-direction: column;
+}
+
+.hourValue {
+  font-size: $font-size-base;
+  font-weight: $font-weight-semibold;
+  color: $color-primary;
+}
+
+.hourLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.statusTag {
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $radius-sm;
+  font-size: $font-size-xs;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.expenseCard {
+  @include card-style;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+  cursor: pointer;
+
+  &:active {
+    transform: scale(0.99);
+    opacity: 0.95;
+    transition: all $transition-base;
+  }
+}
+
+.expenseHeader {
+  @include flex-between;
+  margin-bottom: $spacing-sm;
+}
+
+.expenseType {
+  font-size: $font-size-base;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+}
+
+.expenseAmount {
+  font-size: $font-size-title;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+}
+
+.expenseDesc {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin-bottom: $spacing-sm;
+}
+
+.expenseFooter {
+  @include flex-between;
+}
+
+.expenseDate {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.paymentMethod {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  background: $color-bg-secondary;
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $radius-sm;
+}
+
+.eventSection {
+  margin-bottom: $spacing-xl;
+}
+
+.emptyState {
+  padding: $spacing-xxl * 2;
+  text-align: center;
+  color: $color-text-tertiary;
+}
+
+.emptyText {
+  font-size: $font-size-base;
+  margin-top: $spacing-md;
+}
+
+.listContainer {
+  padding-bottom: 120rpx;
+}
